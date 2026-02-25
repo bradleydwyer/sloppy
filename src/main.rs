@@ -1,4 +1,4 @@
-//! CLI for slop-detector.
+//! CLI for slopcheck.
 
 use std::collections::BTreeSet;
 use std::io::{IsTerminal, Read};
@@ -8,12 +8,12 @@ use std::process;
 use clap::{Parser, Subcommand};
 use serde_json::json;
 
-use slop_detector::config::{dump_config, load_config};
-use slop_detector::detector::analyze;
-use slop_detector::voice::generate_voice_directive;
+use slopcheck::config::{dump_config, load_config};
+use slopcheck::detector::analyze;
+use slopcheck::voice::generate_voice_directive;
 
 #[derive(Parser)]
-#[command(name = "slop-detector", version, about = "Fast regex-based detection of AI prose tells.")]
+#[command(name = "slopcheck", version, about = "Fast regex-based detection of AI prose tells.")]
 struct Cli {
     #[command(subcommand)]
     command: Commands,
@@ -60,7 +60,7 @@ enum Commands {
         #[arg(long)]
         dump: bool,
 
-        /// Create a .slop-detector.toml template.
+        /// Create a .slopcheck.toml template.
         #[arg(long)]
         init: bool,
     },
@@ -199,7 +199,7 @@ fn cmd_voice(config_path: Option<PathBuf>) {
 
 fn cmd_config(dump: bool, init: bool) {
     if init {
-        let target = ".slop-detector.toml";
+        let target = ".slopcheck.toml";
         let defaults = include_str!("defaults.toml");
         std::fs::write(target, defaults).unwrap_or_else(|e| {
             eprintln!("Error writing {target}: {e}");

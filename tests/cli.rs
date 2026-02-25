@@ -1,11 +1,11 @@
-//! Integration tests for the slop-detector CLI.
+//! Integration tests for the slopcheck CLI.
 
 use assert_cmd::Command;
 use predicates::prelude::*;
 use tempfile::TempDir;
 
 fn cmd() -> Command {
-    Command::cargo_bin("slop-detector").unwrap()
+    Command::cargo_bin("slopcheck").unwrap()
 }
 
 // ===========================================================================
@@ -129,5 +129,5 @@ fn test_config_init() {
         .assert()
         .success()
         .stdout(predicate::str::contains("Created"));
-    assert!(dir.path().join(".slop-detector.toml").exists());
+    assert!(dir.path().join(".slopcheck.toml").exists());
 }

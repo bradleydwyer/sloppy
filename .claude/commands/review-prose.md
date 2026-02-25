@@ -1,6 +1,6 @@
 # Review Prose for AI Tells
 
-Analyze text for AI writing patterns (slop) using the deterministic `slop-detector` tool, then apply contextual LLM judgment to suggest specific rewrites.
+Analyze text for AI writing patterns (slop) using the deterministic `slopcheck` tool, then apply contextual LLM judgment to suggest specific rewrites.
 
 ## Input
 
@@ -10,7 +10,7 @@ $ARGUMENTS
 
 1. **Run the detector.** Save the input text to a temporary file and run:
    ```
-   slop-detector analyze -f json /tmp/slop_review.md
+   slopcheck analyze -f json /tmp/slop_review.md
    ```
    Parse the JSON output to get the score, flags, and pass/fail status.
 
@@ -33,7 +33,7 @@ $ARGUMENTS
 
 6. **Re-run the detector** on the revised text:
    ```
-   slop-detector analyze -f json /tmp/slop_review_revised.md
+   slopcheck analyze -f json /tmp/slop_review_revised.md
    ```
    Report the new score. If it still fails, iterate.
 

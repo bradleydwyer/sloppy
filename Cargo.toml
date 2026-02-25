@@ -1,12 +1,12 @@
 [package]
-name = "slop-detector"
+name = "slopcheck"
 version = "0.1.0"
 edition = "2021"
 description = "Fast regex-based detection of AI prose tells. No LLM calls, no heavy NLP."
 license = "MIT"
 
 [[bin]]
-name = "slop-detector"
+name = "slopcheck"
 path = "src/main.rs"
 
 [dependencies]

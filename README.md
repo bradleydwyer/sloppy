@@ -1,4 +1,4 @@
-# slop-detector
+# slopcheck
 
 Fast regex-based detection of AI prose tells ("slop"). Scores text 0–100.
 
@@ -14,29 +14,29 @@ Or build manually:
 
 ```bash
 cargo build --release
-cp target/release/slop-detector ~/.local/bin/
+cp target/release/slopcheck ~/.local/bin/
 ```
 
 ## Usage
 
 ```bash
 # Analyze a file
-slop-detector analyze README.md
+slopcheck analyze README.md
 
 # Pipe from stdin
-echo "The vibrant tapestry of innovation delves deeper." | slop-detector analyze
+echo "The vibrant tapestry of innovation delves deeper." | slopcheck analyze
 
 # JSON output for programmatic use
-slop-detector analyze -f json document.md
+slopcheck analyze -f json document.md
 
 # Quiet mode — just score and pass/fail
-slop-detector analyze -q document.md
+slopcheck analyze -q document.md
 
 # Custom threshold (default: 30)
-slop-detector analyze -t 20 document.md
+slopcheck analyze -t 20 document.md
 
 # Disable specific checks
-slop-detector analyze --disable burstiness --disable rule_of_three document.md
+slopcheck analyze --disable burstiness --disable rule_of_three document.md
 ```
 
 ## What It Detects
@@ -64,17 +64,17 @@ Each check contributes a penalty (per flag, capped per check). Raw penalties are
 
 ## Configuration
 
-Create a `.slop-detector.toml` in your project root:
+Create a `.slopcheck.toml` in your project root:
 
 ```bash
-slop-detector config --init
+slopcheck config --init
 ```
 
 You can add/remove words, adjust penalty weights, change thresholds, or disable checks entirely.
 
 ```bash
 # View resolved config
-slop-detector config --dump
+slopcheck config --dump
 ```
 
 ## Voice Directive
@@ -82,7 +82,7 @@ slop-detector config --dump
 Generate a system prompt directive that prevents slop at generation time:
 
 ```bash
-slop-detector voice
+slopcheck voice
 ```
 
 This outputs constraints derived from the same rules the detector uses, keeping prevention and detection in sync.

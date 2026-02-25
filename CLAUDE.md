@@ -1,13 +1,13 @@
-# slop-detector
+# slopcheck
 
 Fast regex-based AI prose detection. Scores text 0-100 for "slop" — AI writing tells.
 No LLM calls, no heavy NLP dependencies. Pure Rust + regex. Single binary, zero runtime deps.
 
 ## Quick reference
 
-- `slop-detector analyze file.md` — CLI
-- `slop-detector analyze -f json file.md` — JSON output for programmatic use
-- `slop-detector voice` — generate voice directive prompt from config
+- `slopcheck analyze file.md` — CLI
+- `slopcheck analyze -f json file.md` — JSON output for programmatic use
+- `slopcheck voice` — generate voice directive prompt from config
 
 ## Architecture
 
@@ -24,7 +24,7 @@ No LLM calls, no heavy NLP dependencies. Pure Rust + regex. Single binary, zero 
 
 ```
 cargo build --release
-cp target/release/slop-detector ~/.local/bin/  # or anywhere on PATH
+cp target/release/slopcheck ~/.local/bin/  # or anywhere on PATH
 ```
 
 ## Running tests

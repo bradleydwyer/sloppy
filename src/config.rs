@@ -49,7 +49,7 @@ impl Default for Config {
 ///
 /// Three layers, merged top-down:
 /// 1. Built-in defaults (defaults.toml embedded in binary)
-/// 2. Project config (.slop-detector.toml in working directory)
+/// 2. Project config (.slopcheck.toml in working directory)
 /// 3. Runtime overrides (threshold, disabled checks)
 pub fn load_config(path: Option<&Path>, project_dir: Option<&Path>) -> Config {
     // 1. Load built-in defaults
@@ -62,7 +62,7 @@ pub fn load_config(path: Option<&Path>, project_dir: Option<&Path>) -> Config {
         let search_dir = project_dir
             .map(|p| p.to_path_buf())
             .unwrap_or_else(|| std::env::current_dir().unwrap_or_else(|_| PathBuf::from(".")));
-        let candidate = search_dir.join(".slop-detector.toml");
+        let candidate = search_dir.join(".slopcheck.toml");
         if candidate.exists() {
             Some(candidate)
         } else {
@@ -295,7 +295,7 @@ simple = ["delve"]
     fn test_load_with_override_file() {
         let dir = tempfile::tempdir().unwrap();
         std::fs::write(
-            dir.path().join(".slop-detector.toml"),
+            dir.path().join(".slopcheck.toml"),
             "[general]\nthreshold = 15\n",
         )
         .unwrap();

@@ -1,6 +1,6 @@
 ---
 name: review-prose
-description: "Detect and fix AI prose tells (slop) in text. Two-layer system: fast regex-based detection via the slop-detector CLI, plus LLM contextual review and rewriting. Use when reviewing, editing, or generating prose that needs to read as human-written."
+description: "Detect and fix AI prose tells (slop) in text. Two-layer system: fast regex-based detection via the slopcheck CLI, plus LLM contextual review and rewriting. Use when reviewing, editing, or generating prose that needs to read as human-written."
 source: personal
 risk: safe
 domain: writing
@@ -12,7 +12,7 @@ version: 0.1.0
 
 Two-layer anti-slop system for catching and fixing AI writing patterns.
 
-**Layer 1** — Deterministic regex detection via the `slop-detector` CLI. Fast (<30ms), consistent, zero false negatives for known patterns. Handles word blacklists, structural patterns, and statistical analysis that LLMs can't do reliably (counting, standard deviations).
+**Layer 1** — Deterministic regex detection via the `slopcheck` CLI. Fast (<30ms), consistent, zero false negatives for known patterns. Handles word blacklists, structural patterns, and statistical analysis that LLMs can't do reliably (counting, standard deviations).
 
 **Layer 2** — LLM contextual review. Interprets detector flags in context, catches what regex misses (hedging, equivocation, tonal flatness), and produces specific rewrites.
 
@@ -26,19 +26,19 @@ Two-layer anti-slop system for catching and fixing AI writing patterns.
 
 ## Prerequisites
 
-The `slop-detector` CLI must be installed:
+The `slopcheck` CLI must be installed:
 
 ```bash
-cd /path/to/slop-detector && cargo install --path .
+cd /path/to/slopcheck && cargo install --path .
 ```
 
 Or copy the pre-built binary:
 
 ```bash
-cp /path/to/slop-detector/target/release/slop-detector ~/.local/bin/
+cp /path/to/slopcheck/target/release/slopcheck ~/.local/bin/
 ```
 
-Verify: `slop-detector analyze -q <<< "test"` should output a score.
+Verify: `slopcheck analyze -q <<< "test"` should output a score.
 
 ## Workflow
 
@@ -47,7 +47,7 @@ Verify: `slop-detector analyze -q <<< "test"` should output a score.
 Save the text to a temporary file and run the deterministic detector:
 
 ```bash
-slop-detector analyze -f json /tmp/slop_review_input.md
+slopcheck analyze -f json /tmp/slop_review_input.md
 ```
 
 Parse the JSON output. It returns:
@@ -102,7 +102,7 @@ Rewrite the full text addressing all flags and contextual issues. Follow these p
 Run the detector again on the revised text:
 
 ```bash
-slop-detector analyze -f json /tmp/slop_review_revised.md
+slopcheck analyze -f json /tmp/slop_review_revised.md
 ```
 
 Report the new score. If it still fails the threshold, iterate on the remaining flags.
@@ -112,7 +112,7 @@ Report the new score. If it still fails the threshold, iterate on the remaining 
 To prevent slop at generation time rather than catching it after, inject the voice directive into your system prompt:
 
 ```bash
-slop-detector voice
+slopcheck voice
 ```
 
 This generates a constraint block derived from the same rules the detector uses, keeping prevention and detection in sync. Use it in any LLM system prompt where the output needs to read as human-written.
@@ -133,4 +133,4 @@ This generates a constraint block derived from the same rules the detector uses,
 
 ## Configuration
 
-The detector is configurable via `.slop-detector.toml` in the project root. Run `slop-detector config --init` to create a template. Users can add/remove words, adjust penalty weights, change thresholds, or disable checks entirely.
+The detector is configurable via `.slopcheck.toml` in the project root. Run `slopcheck config --init` to create a template. Users can add/remove words, adjust penalty weights, change thresholds, or disable checks entirely.

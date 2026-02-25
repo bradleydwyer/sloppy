@@ -1,4 +1,4 @@
-//! Voice directive generation from slop-detector configuration.
+//! Voice directive generation from slopcheck configuration.
 //!
 //! Generates a system-level prompt directive that tells an LLM what to avoid,
 //! derived from the same word lists and patterns that the detector uses for scoring.
@@ -256,7 +256,7 @@ mod tests {
     fn test_reflects_config_changes() {
         let dir = tempfile::tempdir().unwrap();
         std::fs::write(
-            dir.path().join(".slop-detector.toml"),
+            dir.path().join(".slopcheck.toml"),
             "[checks.em_dash_count]\nenabled = false\n",
         )
         .unwrap();
@@ -269,7 +269,7 @@ mod tests {
     fn test_custom_words_appear() {
         let dir = tempfile::tempdir().unwrap();
         std::fs::write(
-            dir.path().join(".slop-detector.toml"),
+            dir.path().join(".slopcheck.toml"),
             "[checks.lexical_blacklist.words]\nsimple = [\"synergy\", \"leverage\"]\n",
         )
         .unwrap();
