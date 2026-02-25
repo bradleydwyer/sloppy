@@ -92,7 +92,7 @@ Fifteen regex-based checks, each pure functions: text in, flags out.
 
 ## Scoring
 
-Each check contributes penalties capped at its max. Raw penalties are normalized to 0-100. Default pass threshold is 30.
+Each check contributes penalties capped at its max. Raw penalties are normalized to 0-100 with a minimum denominator floor (sum of the 3 largest check maxes), so a single check on short text can't inflate the score to 100. Default pass threshold is 30.
 
 | Range | Meaning |
 |-------|---------|

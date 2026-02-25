@@ -13,7 +13,7 @@ user-invocable: true
 argument-hint: "[file to review, or 'voice' to generate prevention prompt]"
 metadata:
   author: bradleydwyer
-  version: "0.5.1"
+  version: "0.5.2"
   status: experimental
 ---
 
@@ -42,7 +42,7 @@ brew install slopcheck
 
 **From source (requires Rust toolchain):**
 ```bash
-cargo install --git https://github.com/bradleydwyer/slopcheck --tag v0.5.1
+cargo install --git https://github.com/bradleydwyer/slopcheck --tag v0.5.2
 ```
 
 **Verify installation:**

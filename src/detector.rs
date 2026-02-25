@@ -187,10 +187,17 @@ pub fn analyze(text: &str, slop_threshold: u32, config: Option<&Config>) -> Slop
         all_flags.extend(flags);
     }
 
-    let max_raw = if applicable_max == 0 {
+    // Floor: denominator must be at least the sum of the 3 largest check
+    // max_penalties. Prevents a single check on short text from scoring 100.
+    let mut all_maxes: Vec<u32> = checks.iter().map(|c| c.max_penalty).collect();
+    all_maxes.sort_unstable_by(|a, b| b.cmp(a));
+    let floor: u32 = all_maxes.iter().take(3).sum();
+    let effective_max = applicable_max.max(floor);
+
+    let max_raw = if effective_max == 0 {
         1
     } else {
-        applicable_max
+        effective_max
     };
     let score = ((raw_penalty as f64 / max_raw as f64) * 100.0).floor() as u32;
     let score = score.min(100);
@@ -353,6 +360,27 @@ mod tests {
             "These checks did not fire: {:?}",
             missing
         );
+    }
+
+    #[test]
+    fn test_single_check_on_short_text_does_not_score_100() {
+        // Short uniform-sentence text triggers only burstiness.
+        // Before the floor fix this scored 100 (20/20). With the floor
+        // the denominator is the sum of the 3 largest check maxes, so
+        // a single check alone can't blow up the score.
+        let short = "Queue p75 under target across all platforms. \
+                      Kochiku p75 has held at seven seconds since October. \
+                      Stress test scaled to thirty-eight thousand workers. \
+                      New subnet deployed for additional worker capacity. \
+                      Artifactory investigation confirmed pull storm was benign. \
+                      NFS mount slowdown identified as queue time impact.";
+        let result = analyze(short, 30, None);
+        assert!(
+            result.score < 30,
+            "Single-check short text scored {} (expected < 30)",
+            result.score
+        );
+        assert!(result.passed);
     }
 
     #[test]
