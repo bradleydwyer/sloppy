@@ -42,7 +42,7 @@ brew install slopcheck
 
 **From source (requires Rust toolchain):**
 ```bash
-cargo install --git https://github.com/bradleydwyer/slopcheck
+cargo install --git https://github.com/bradleydwyer/slopcheck --tag v0.5.1
 ```
 
 **Verify installation:**
