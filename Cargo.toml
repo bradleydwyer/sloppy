@@ -1,6 +1,6 @@
 [package]
 name = "slopcheck"
-version = "0.2.0"
+version = "0.3.0"
 edition = "2021"
 description = "Fast regex-based detection of AI prose tells. No LLM calls, no heavy NLP."
 license = "MIT"
