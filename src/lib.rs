@@ -8,7 +8,7 @@ pub mod detector;
 pub mod models;
 pub mod voice;
 
-pub use config::{load_config, Config};
+pub use config::{Config, load_config};
 pub use detector::analyze;
 pub use models::{CheckScore, SlopFlag, SlopResult};
 pub use voice::generate_voice_directive;

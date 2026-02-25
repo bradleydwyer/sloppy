@@ -187,7 +187,11 @@ pub fn analyze(text: &str, slop_threshold: u32, config: Option<&Config>) -> Slop
         all_flags.extend(flags);
     }
 
-    let max_raw = if applicable_max == 0 { 1 } else { applicable_max };
+    let max_raw = if applicable_max == 0 {
+        1
+    } else {
+        applicable_max
+    };
     let score = ((raw_penalty as f64 / max_raw as f64) * 100.0).floor() as u32;
     let score = score.min(100);
 
@@ -248,8 +252,7 @@ mod tests {
 
     #[test]
     fn test_clean_text_scores_low() {
-        let clean =
-            "She found fourteen dollars in the pocket of a coat she hadn't worn since 2019. \
+        let clean = "She found fourteen dollars in the pocket of a coat she hadn't worn since 2019. \
                       The coat smelled like a restaurant that no longer exists. \
                       She put the money back.";
         let result = analyze(clean, 30, None);
@@ -279,8 +282,7 @@ mod tests {
 
     #[test]
     fn test_custom_threshold_changes_passed() {
-        let text =
-            "This serves as a crucial and robust system. Furthermore, it delves into vibrant \
+        let text = "This serves as a crucial and robust system. Furthermore, it delves into vibrant \
                      new territory, highlighting its groundbreaking potential.";
         let strict = analyze(text, 5, None);
         let lenient = analyze(text, 100, None);

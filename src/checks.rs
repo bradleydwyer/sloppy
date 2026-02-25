@@ -1270,9 +1270,11 @@ mod tests {
     #[test]
     fn test_underscore_not_flagged_as_noun() {
         let flags = check_lexical_blacklist("The variable name uses an underscore.", None);
-        assert!(!flags
-            .iter()
-            .any(|f| f.description.contains("underscore (verb)")));
+        assert!(
+            !flags
+                .iter()
+                .any(|f| f.description.contains("underscore (verb)"))
+        );
     }
 
     #[test]
@@ -1284,9 +1286,11 @@ mod tests {
     #[test]
     fn test_highlight_noun_not_flagged() {
         let flags = check_lexical_blacklist("The highlight of the evening was the speech.", None);
-        assert!(!flags
-            .iter()
-            .any(|f| f.description.contains("highlight (verb)")));
+        assert!(
+            !flags
+                .iter()
+                .any(|f| f.description.contains("highlight (verb)"))
+        );
     }
 
     #[test]
@@ -1298,9 +1302,11 @@ mod tests {
     #[test]
     fn test_literal_landscape_not_flagged() {
         let flags = check_lexical_blacklist("The landscape was covered in snow.", None);
-        assert!(!flags
-            .iter()
-            .any(|f| f.description.contains("landscape (metaphorical)")));
+        assert!(
+            !flags
+                .iter()
+                .any(|f| f.description.contains("landscape (metaphorical)"))
+        );
     }
 
     #[test]
@@ -1324,26 +1330,32 @@ mod tests {
     #[test]
     fn test_detects_holds_the_distinction() {
         let flags = check_lexical_blacklist("She holds the distinction of being the first.", None);
-        assert!(flags
-            .iter()
-            .any(|f| f.description.contains("holds the distinction")));
+        assert!(
+            flags
+                .iter()
+                .any(|f| f.description.contains("holds the distinction"))
+        );
     }
 
     #[test]
     fn test_detects_reflects_broader() {
         let flags = check_lexical_blacklist("This reflects broader trends in society.", None);
-        assert!(flags
-            .iter()
-            .any(|f| f.description.contains("reflects broader")));
+        assert!(
+            flags
+                .iter()
+                .any(|f| f.description.contains("reflects broader"))
+        );
     }
 
     #[test]
     fn test_detects_shaping_the_evolving() {
         let flags =
             check_lexical_blacklist("These forces are shaping the evolving landscape.", None);
-        assert!(flags
-            .iter()
-            .any(|f| f.description.contains("shaping the evolving")));
+        assert!(
+            flags
+                .iter()
+                .any(|f| f.description.contains("shaping the evolving"))
+        );
     }
 
     #[test]
@@ -1352,9 +1364,11 @@ mod tests {
             "This decision, marking a pivotal shift, changed everything.",
             None,
         );
-        assert!(flags
-            .iter()
-            .any(|f| f.description.contains("marking a pivotal")));
+        assert!(
+            flags
+                .iter()
+                .any(|f| f.description.contains("marking a pivotal"))
+        );
     }
 
     #[test]
@@ -1363,9 +1377,11 @@ mod tests {
             "He retired, leaving an indelible mark on the institution.",
             None,
         );
-        assert!(flags
-            .iter()
-            .any(|f| f.description.contains("leaving an indelible mark")));
+        assert!(
+            flags
+                .iter()
+                .any(|f| f.description.contains("leaving an indelible mark"))
+        );
     }
 
     #[test]
@@ -1389,12 +1405,16 @@ mod tests {
     #[test]
     fn test_case_insensitive() {
         let flags = check_lexical_blacklist("DELVE into the data. VIBRANT colours.", None);
-        assert!(flags
-            .iter()
-            .any(|f| f.description.to_lowercase().contains("delve")));
-        assert!(flags
-            .iter()
-            .any(|f| f.description.to_lowercase().contains("vibrant")));
+        assert!(
+            flags
+                .iter()
+                .any(|f| f.description.to_lowercase().contains("delve"))
+        );
+        assert!(
+            flags
+                .iter()
+                .any(|f| f.description.to_lowercase().contains("vibrant"))
+        );
     }
 
     // --- Em-dash count ---
