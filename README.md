@@ -1,181 +1,114 @@
 # slop-detector
 
-Catch AI prose tells before your readers do.
+Fast regex-based detection of AI prose tells ("slop"). Scores text 0–100.
 
-Two-layer anti-slop system: a **deterministic detection engine** (regex-based, <100ms, no LLM calls) paired with an **AI agent skill** that interprets the results in context, catches what regex can't, and rewrites flagged passages.
+No LLM calls. No heavy NLP. Single static binary. Runs in <30ms.
 
-Install as a CLI tool for fast automated checking. Install as a skill for full contextual review and rewriting.
-
-## What it catches
-
-| Check | What it flags | Why it matters |
-|-------|--------------|----------------|
-| **Lexical blacklist** | "delve", "tapestry", "vibrant", "robust", "groundbreaking", and 20+ more | Words and phrases that appear in AI output at 10-50x the rate of human writing |
-| **Trailing participles** | ", reflecting the community's deep commitment." | The single most reliable structural AI tell |
-| **Rule of three** | "safe, efficient, and reliable" | AI defaults to comma-separated triplets; humans rarely do |
-| **Em-dash overuse** | More than one em-dash per piece | AI scatters em-dashes; most human writers use them sparingly |
-| **Transition openers** | "Moreover", "Furthermore", "Additionally" | AI reaches for explicit logical connectors that human essayists avoid |
-| **Burstiness** | Sentences all roughly the same length | Human writing has high variance in sentence length; AI flattens it |
-| **Copulative inflation** | "serves as", "stands as", "functions as" | AI inflates "is" into fancier verbs for no reason |
-| **Formulaic conclusions** | "In summary", "Overall", "Moving forward" | Boilerplate wrap-ups learned from academic/journalistic corpora |
-| **Patterned negation** | "It's not X. It's Y." | A rhetorical device AI overuses to the point of self-parody |
-
-## Installation
+## Install
 
 ```bash
-pip install git+https://github.com/bradleydwyer/slop-detector.git
+cargo install --path .
 ```
 
-Requires Python 3.11+. Only runtime dependency is `click`.
+Or build manually:
+
+```bash
+cargo build --release
+cp target/release/slop-detector ~/.local/bin/
+```
 
 ## Usage
 
-### CLI
-
 ```bash
 # Analyze a file
-slop-detector analyze draft.md
+slop-detector analyze README.md
 
 # Pipe from stdin
 echo "The vibrant tapestry of innovation delves deeper." | slop-detector analyze
 
-# JSON output (for programmatic use)
-slop-detector analyze -f json draft.md
+# JSON output for programmatic use
+slop-detector analyze -f json document.md
+
+# Quiet mode — just score and pass/fail
+slop-detector analyze -q document.md
 
 # Custom threshold (default: 30)
-slop-detector analyze -t 20 draft.md
+slop-detector analyze -t 20 document.md
 
-# Quiet mode (score only)
-slop-detector analyze -q draft.md
+# Disable specific checks
+slop-detector analyze --disable burstiness --disable rule_of_three document.md
 ```
 
-Example output:
+## What It Detects
 
+| Check | Detects | Why It's an AI Tell |
+|-------|---------|-------------------|
+| **lexical_blacklist** | "delve", "tapestry", "vibrant", "robust", 20+ more | These words appear in AI output at 10–50x the rate of human writing |
+| **trailing_participle** | ", reflecting the community's deep commitment." | The single most reliable structural AI tell |
+| **rule_of_three** | "safe, efficient, and reliable" | AI defaults to comma-separated triplets |
+| **em_dash_count** | More than 1 em-dash per piece | AI scatters em-dashes; humans use them sparingly |
+| **transition_openers** | "Moreover", "Furthermore", "Additionally" | AI reaches for explicit logical connectors |
+| **burstiness** | Sentences all roughly the same length | Human writing has high variance; AI flattens it |
+| **copulative_inflation** | "serves as", "stands as", "functions as" | AI inflates "is" into fancier verbs |
+| **formulaic_conclusion** | "In summary", "Overall", "Moving forward" | Boilerplate wrap-ups from training corpora |
+| **patterned_negation** | "It's not X. It's Y." | A rhetorical device AI overuses |
+
+## Scoring
+
+Each check contributes a penalty (per flag, capped per check). Raw penalties are normalized to 0–100. Default pass threshold is 30.
+
+- **0–10**: Clean human prose
+- **10–30**: Minor tells, probably fine
+- **30–60**: Noticeable AI patterns
+- **60–100**: Unmistakably AI-generated
+
+## Configuration
+
+Create a `.slop-detector.toml` in your project root:
+
+```bash
+slop-detector config --init
 ```
-Score: 30/100  FAIL
 
-  [warning]  lexical_blacklist: Banned phrase "tapestry" found
-             ..."Furthermore, the tapestry of collaboration is"...
-  [warning]  lexical_blacklist: Banned phrase "vibrant" found
-             ..."a testament to the vibrant, robust, and crucia"...
-  [warning]  trailing_participle: Trailing participial phrase detected
-             ...", highlighting its potential to reshape the landscape."...
-  [info]     rule_of_three: Rule-of-three triplet detected
-             "vibrant, robust, and crucial"
+You can add/remove words, adjust penalty weights, change thresholds, or disable checks entirely.
 
-14 flag(s) from 4 check(s)
+```bash
+# View resolved config
+slop-detector config --dump
 ```
 
-Exit code is 0 on pass, 1 on fail — works in CI pipelines.
+## Voice Directive
 
-### Python library
-
-```python
-from slop_detector import analyze
-
-result = analyze("The vibrant tapestry of innovation delves deeper.")
-print(result.score)   # 0-100
-print(result.passed)  # True/False
-for flag in result.flags:
-    print(f"{flag.check_name}: {flag.description}")
-```
-
-### Voice directive generation
-
-Generate a system prompt directive derived from the same rules the detector uses — keeps your prevention layer and detection layer in sync:
+Generate a system prompt directive that prevents slop at generation time:
 
 ```bash
 slop-detector voice
 ```
 
-```python
-from slop_detector import generate_voice_directive
+This outputs constraints derived from the same rules the detector uses, keeping prevention and detection in sync.
 
-directive = generate_voice_directive()
-# Inject into your LLM system prompt
+## JSON Output Schema
+
+```json
+{
+  "score": 42,
+  "threshold": 30,
+  "passed": false,
+  "flags": [
+    {
+      "check_name": "lexical_blacklist",
+      "description": "Banned phrase \"delve\" found",
+      "location": "...\"we must delve deeper into\"...",
+      "severity": "warning"
+    }
+  ],
+  "summary": {
+    "total_flags": 7,
+    "checks_triggered": ["lexical_blacklist", "rule_of_three"]
+  }
+}
 ```
-
-## Configuration
-
-Everything works with zero configuration. To customize, create a `.slop-detector.toml` in your project root:
-
-```bash
-slop-detector config --init  # copies defaults as a starting point
-```
-
-Override anything:
-
-```toml
-[general]
-threshold = 20  # stricter than default 30
-
-[checks.em_dash_count]
-enabled = false  # we like em-dashes
-
-[checks.lexical_blacklist.words]
-simple = [
-    "delve", "tapestry", "vibrant",
-    "synergy", "leverage", "paradigm",  # add your own
-]
-
-[checks.transition_openers]
-banned = [
-    "Moreover", "Furthermore", "Additionally",
-    "Notably", "Importantly",  # add your own
-]
-```
-
-Lists in your config **replace** the defaults (not append). Copy the full list from `defaults.toml` if you want to extend.
-
-## Agent skill
-
-This repo is an installable skill for AI agents (Claude Code, etc.). The skill adds an LLM layer on top of the deterministic detector:
-
-1. Runs `slop-detector analyze -f json` for reliable, consistent pattern matching
-2. Interprets flags in context (is "landscape" literal geography or a metaphor?)
-3. Catches what regex can't — hedging, equivocation, tonal flatness, generic abstractions
-4. Produces specific rewrites for every flagged passage
-5. Re-runs the detector to verify the score dropped
-
-**Why both layers?** The regex engine is fast, deterministic, and catches things LLMs are unreliable at (counting em-dashes, computing sentence-length standard deviations, ensuring zero false negatives on banned words). The LLM layer handles contextual judgment and rewriting that regex can't do. They complement each other.
-
-Install the skill:
-
-```bash
-npx skills add bradleydwyer/slop-detector
-```
-
-See [SKILL.md](SKILL.md) for the full workflow.
-
-## Development
-
-```bash
-git clone https://github.com/bradleydwyer/slop-detector.git
-cd slop-detector
-pip install -e ".[dev]"
-pytest
-```
-
-133 tests. They run in under a second.
-
-## How scoring works
-
-Each check contributes a penalty per flag hit, capped at a per-check maximum. The raw penalty is normalized to 0-100. A score of 0 is pristine; 100 is maximally sloppy. The default pass/fail threshold is 30.
-
-| Check | Penalty per flag | Max penalty |
-|-------|-----------------|-------------|
-| lexical_blacklist | 8 | 40 |
-| trailing_participle | 10 | 30 |
-| transition_openers | 8 | 24 |
-| burstiness | 20 | 20 |
-| formulaic_conclusion | 10 | 20 |
-| rule_of_three | 5 | 20 |
-| copulative_inflation | 5 | 20 |
-| patterned_negation | 5 | 15 |
-| em_dash_count | 10 | 10 |
-
-All weights are configurable via TOML.
 
 ## License
 
-MIT. See [LICENSE](LICENSE).
+MIT

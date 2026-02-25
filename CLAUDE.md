@@ -1,34 +1,41 @@
 # slop-detector
 
 Fast regex-based AI prose detection. Scores text 0-100 for "slop" — AI writing tells.
-No LLM calls, no heavy NLP dependencies. Pure Python + regex. Runs in <100ms per piece.
+No LLM calls, no heavy NLP dependencies. Pure Rust + regex. Single binary, zero runtime deps.
 
 ## Quick reference
 
-- `from slop_detector import analyze` — main API, returns SlopResult
 - `slop-detector analyze file.md` — CLI
 - `slop-detector analyze -f json file.md` — JSON output for programmatic use
 - `slop-detector voice` — generate voice directive prompt from config
 
 ## Architecture
 
-- `src/slop_detector/checks.py` — 9 check functions, pure regex
-- `src/slop_detector/detector.py` — orchestrator, calls checks, computes score
-- `src/slop_detector/config.py` — TOML config loading and merging
-- `src/slop_detector/models.py` — SlopFlag, SlopResult dataclasses
-- `src/slop_detector/voice.py` — voice directive generation from config
-- `src/slop_detector/defaults.toml` — default word lists and penalties
-- `src/slop_detector/cli.py` — Click CLI entry point
+- `src/checks.rs` — 9 check functions, pure regex
+- `src/detector.rs` — orchestrator, calls checks, computes score
+- `src/config.rs` — TOML config loading and merging
+- `src/models.rs` — SlopFlag, SlopResult structs
+- `src/voice.rs` — voice directive generation from config
+- `src/defaults.toml` — default word lists and penalties (embedded at compile time)
+- `src/main.rs` — Clap CLI entry point
+- `src/lib.rs` — public API
+
+## Build & install
+
+```
+cargo build --release
+cp target/release/slop-detector ~/.local/bin/  # or anywhere on PATH
+```
 
 ## Running tests
 
 ```
-pytest
+cargo test
 ```
 
 ## Key conventions
 
 - No LLM calls, no network, no heavy NLP
-- All checks are pure functions: text in, list[SlopFlag] out
+- All checks are pure functions: text in, Vec<SlopFlag> out
 - Config is optional — everything works with zero configuration
-- Python 3.11+ required (uses stdlib tomllib)
+- defaults.toml is embedded in the binary via include_str!

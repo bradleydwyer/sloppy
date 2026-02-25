@@ -1,0 +1,14 @@
+//! slop-detector: Fast regex-based detection of AI prose tells.
+//!
+//! No LLM calls, no heavy NLP. Pure regex. Runs in <10ms per piece.
+
+pub mod checks;
+pub mod config;
+pub mod detector;
+pub mod models;
+pub mod voice;
+
+pub use config::{load_config, Config};
+pub use detector::analyze;
+pub use models::{SlopFlag, SlopResult};
+pub use voice::generate_voice_directive;

@@ -1,0 +1,281 @@
+//! Voice directive generation from slop-detector configuration.
+//!
+//! Generates a system-level prompt directive that tells an LLM what to avoid,
+//! derived from the same word lists and patterns that the detector uses for scoring.
+
+use crate::config::Config;
+
+/// Generate a voice authenticity directive from config.
+/// The output is suitable for injection into an LLM system prompt.
+pub fn generate_voice_directive(config: &Config) -> String {
+    let mut sections = vec![
+        "[System-level writing constraints — apply to ALL generated content]".to_string(),
+    ];
+
+    // Lexical restrictions
+    if let Some(lexical) = config.checks.get("lexical_blacklist") {
+        if lexical.enabled {
+            sections.push(build_lexical_section(&lexical.params));
+        }
+    }
+
+    // Punctuation and syntax
+    sections.push(build_punctuation_section(config));
+
+    // Rhythm and structure
+    sections.push(build_structure_section(config));
+
+    // Tone
+    sections.push(build_tone_section(config));
+
+    sections.join("\n\n")
+}
+
+fn build_lexical_section(params: &toml::Table) -> String {
+    let mut lines = vec!["LEXICAL RESTRICTIONS:".to_string()];
+
+    if let Some(words) = params
+        .get("words")
+        .and_then(|w| w.as_table())
+        .and_then(|w| w.get("simple"))
+        .and_then(|s| s.as_array())
+    {
+        let word_list: Vec<&str> = words.iter().filter_map(|v| v.as_str()).collect();
+        if !word_list.is_empty() {
+            lines.push(format!("Never use these words: {}.", word_list.join(", ")));
+        }
+    }
+
+    if let Some(entries) = params
+        .get("patterns")
+        .and_then(|p| p.as_table())
+        .and_then(|p| p.get("entries"))
+        .and_then(|e| e.as_array())
+    {
+        let phrase_list: Vec<String> = entries
+            .iter()
+            .filter_map(|e| {
+                e.as_array()
+                    .and_then(|a| a.get(1))
+                    .and_then(|v| v.as_str())
+                    .map(|s| format!("\"{s}\""))
+            })
+            .collect();
+        if !phrase_list.is_empty() {
+            lines.push(format!("Never use these phrases: {}.", phrase_list.join(", ")));
+        }
+    }
+
+    lines.push(
+        "Do not use promotional superlatives or inflate the significance of mundane things."
+            .to_string(),
+    );
+
+    lines.join("\n")
+}
+
+fn build_punctuation_section(config: &Config) -> String {
+    let mut lines = vec!["PUNCTUATION AND SYNTAX:".to_string()];
+
+    if let Some(em_dash) = config.checks.get("em_dash_count") {
+        if em_dash.enabled {
+            let max_allowed = em_dash
+                .params
+                .get("max_allowed")
+                .and_then(|v| v.as_integer())
+                .unwrap_or(1);
+            lines.push(format!(
+                "- Maximum {max_allowed} em-dash(\u{2014}) per piece. \
+                 Prefer parentheses or semicolons for asides."
+            ));
+        }
+    }
+
+    if let Some(trailing) = config.checks.get("trailing_participle") {
+        if trailing.enabled {
+            lines.push(
+                "- Never end a sentence with a comma followed by a present participle\n  \
+                 (e.g. \", reflecting the...\" or \", underscoring the importance of...\")."
+                    .to_string(),
+            );
+        }
+    }
+
+    if let Some(rot) = config.checks.get("rule_of_three") {
+        if rot.enabled {
+            lines.push(
+                "- Do not group adjectives, examples, or clauses in threes. Use two or four."
+                    .to_string(),
+            );
+        }
+    }
+
+    if let Some(trans) = config.checks.get("transition_openers") {
+        if trans.enabled {
+            if let Some(banned) = trans
+                .params
+                .get("banned")
+                .and_then(|b| b.as_array())
+            {
+                let banned_str: Vec<&str> =
+                    banned.iter().filter_map(|v| v.as_str()).collect();
+                if !banned_str.is_empty() {
+                    lines.push(format!(
+                        "- Do not start paragraphs with: {}.",
+                        banned_str.join(", ")
+                    ));
+                }
+            }
+        }
+    }
+
+    if let Some(cop) = config.checks.get("copulative_inflation") {
+        if cop.enabled {
+            lines.push(
+                "- Use \"is\" and \"are\" instead of \"serves as\", \"stands as\", \"functions as\"."
+                    .to_string(),
+            );
+        }
+    }
+
+    lines.join("\n")
+}
+
+fn build_structure_section(config: &Config) -> String {
+    let mut lines = vec!["RHYTHM AND STRUCTURE:".to_string()];
+
+    if let Some(burst) = config.checks.get("burstiness") {
+        if burst.enabled {
+            lines.push(
+                "- Vary sentence length sharply. Mix fragments under 6 words with compound sentences\n  \
+                 over 30 words. Never write three consecutive sentences of similar length."
+                    .to_string(),
+            );
+        }
+    }
+
+    lines.push(
+        "- Paragraphs must be asymmetrical \u{2014} varying numbers of sentences, varying lengths."
+            .to_string(),
+    );
+
+    if let Some(neg) = config.checks.get("patterned_negation") {
+        if neg.enabled {
+            lines.push(
+                "- No patterned negations (\"It's not X. It's Y.\" or \"Not merely X, but Y.\")."
+                    .to_string(),
+            );
+        }
+    }
+
+    lines.push("- No dramatic isolated fragments for false emphasis.".to_string());
+
+    lines.join("\n")
+}
+
+fn build_tone_section(config: &Config) -> String {
+    let mut lines = vec!["TONE:".to_string()];
+    lines.push("- Take definitive, committed stances. No balanced-perspective hedging.".to_string());
+    lines.push("- State facts directly without inflating their importance.".to_string());
+
+    if let Some(conc) = config.checks.get("formulaic_conclusion") {
+        if conc.enabled {
+            if let Some(openers) = conc.params.get("openers").and_then(|o| o.as_array()) {
+                let examples: Vec<String> = openers
+                    .iter()
+                    .take(4)
+                    .filter_map(|v| v.as_str().map(|s| format!("\"{s}\"")))
+                    .collect();
+                if !examples.is_empty() {
+                    lines.push(format!(
+                        "- No formulaic conclusions. Never use {}, etc.",
+                        examples.join(", ")
+                    ));
+                }
+            }
+        }
+    }
+
+    lines.push(
+        "- No sycophantic softeners (\"Great question!\", \"I'd be happy to...\").".to_string(),
+    );
+    lines.push(
+        "- Anchor writing in specific, unusual, concrete details rather than\n  \
+         generic abstractions."
+            .to_string(),
+    );
+
+    lines.join("\n")
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::config::load_config;
+    use std::path::Path;
+
+    fn default_config() -> Config {
+        load_config(None, Some(Path::new("/nonexistent")))
+    }
+
+    #[test]
+    fn test_generates_non_empty_directive() {
+        let directive = generate_voice_directive(&default_config());
+        assert!(directive.len() > 100);
+    }
+
+    #[test]
+    fn test_contains_lexical_section() {
+        let directive = generate_voice_directive(&default_config());
+        assert!(directive.contains("LEXICAL RESTRICTIONS"));
+        assert!(directive.contains("delve"));
+    }
+
+    #[test]
+    fn test_contains_punctuation_section() {
+        let directive = generate_voice_directive(&default_config());
+        assert!(directive.contains("PUNCTUATION AND SYNTAX"));
+        assert!(directive.contains("em-dash"));
+    }
+
+    #[test]
+    fn test_contains_structure_section() {
+        let directive = generate_voice_directive(&default_config());
+        assert!(directive.contains("RHYTHM AND STRUCTURE"));
+        assert!(directive.to_lowercase().contains("sentence length"));
+    }
+
+    #[test]
+    fn test_contains_tone_section() {
+        let directive = generate_voice_directive(&default_config());
+        assert!(directive.contains("TONE"));
+        assert!(directive.contains("hedging"));
+    }
+
+    #[test]
+    fn test_reflects_config_changes() {
+        let dir = tempfile::tempdir().unwrap();
+        std::fs::write(
+            dir.path().join(".slop-detector.toml"),
+            "[checks.em_dash_count]\nenabled = false\n",
+        )
+        .unwrap();
+        let config = load_config(None, Some(dir.path()));
+        let directive = generate_voice_directive(&config);
+        assert!(!directive.to_lowercase().contains("em-dash"));
+    }
+
+    #[test]
+    fn test_custom_words_appear() {
+        let dir = tempfile::tempdir().unwrap();
+        std::fs::write(
+            dir.path().join(".slop-detector.toml"),
+            "[checks.lexical_blacklist.words]\nsimple = [\"synergy\", \"leverage\"]\n",
+        )
+        .unwrap();
+        let config = load_config(None, Some(dir.path()));
+        let directive = generate_voice_directive(&config);
+        assert!(directive.contains("synergy"));
+        assert!(directive.contains("leverage"));
+    }
+}

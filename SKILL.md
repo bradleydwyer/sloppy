@@ -12,7 +12,7 @@ version: 0.1.0
 
 Two-layer anti-slop system for catching and fixing AI writing patterns.
 
-**Layer 1** — Deterministic regex detection via the `slop-detector` CLI. Fast (<100ms), consistent, zero false negatives for known patterns. Handles word blacklists, structural patterns, and statistical analysis that LLMs can't do reliably (counting, standard deviations).
+**Layer 1** — Deterministic regex detection via the `slop-detector` CLI. Fast (<30ms), consistent, zero false negatives for known patterns. Handles word blacklists, structural patterns, and statistical analysis that LLMs can't do reliably (counting, standard deviations).
 
 **Layer 2** — LLM contextual review. Interprets detector flags in context, catches what regex misses (hedging, equivocation, tonal flatness), and produces specific rewrites.
 
@@ -29,7 +29,13 @@ Two-layer anti-slop system for catching and fixing AI writing patterns.
 The `slop-detector` CLI must be installed:
 
 ```bash
-pip install git+https://github.com/bradleydwyer/slop-detector.git
+cd /path/to/slop-detector && cargo install --path .
+```
+
+Or copy the pre-built binary:
+
+```bash
+cp /path/to/slop-detector/target/release/slop-detector ~/.local/bin/
 ```
 
 Verify: `slop-detector analyze -q <<< "test"` should output a score.
