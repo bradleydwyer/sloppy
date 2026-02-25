@@ -76,7 +76,7 @@ If the user provides a file path, analyze it directly. If they paste text, write
 slopcheck analyze -f json path/to/file.md || true
 
 # From pasted text
-TMPFILE=$(mktemp /tmp/slop_review_XXXXXX.md)
+TMPFILE=$(mktemp /tmp/slopcheck_XXXXXXXX)
 cat > "$TMPFILE" << 'SLOP_EOF'
 [pasted text here]
 SLOP_EOF
