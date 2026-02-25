@@ -50,6 +50,9 @@ slopcheck analyze --only lexical_blacklist document.md
 
 # Analyze multiple files
 slopcheck analyze *.md
+
+# Generate a voice directive (system prompt to prevent slop at generation time)
+slopcheck voice
 ```
 
 ## What It Detects
