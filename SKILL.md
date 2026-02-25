@@ -72,15 +72,15 @@ Determine the mode from the user's request:
 If the user provides a file path, analyze it directly. If they paste text, write it to a temp file first.
 
 ```bash
-# File path
-slopcheck analyze -f json path/to/file.md
+# File path (|| true prevents non-zero exit code on FAIL — read pass/fail from JSON)
+slopcheck analyze -f json path/to/file.md || true
 
 # From pasted text
 TMPFILE=$(mktemp /tmp/slop_review_XXXXXX.md)
 cat > "$TMPFILE" << 'SLOP_EOF'
 [pasted text here]
 SLOP_EOF
-slopcheck analyze -f json "$TMPFILE"
+slopcheck analyze -f json "$TMPFILE" || true
 ```
 
 Parse the JSON output:
@@ -148,7 +148,7 @@ Rewrite the full text addressing all true-positive flags and contextual issues:
 Run the detector again on the revised text:
 
 ```bash
-slopcheck analyze -f json /tmp/slop_review_revised.md
+slopcheck analyze -f json /tmp/slop_review_revised.md || true
 ```
 
 Report the new score. If it still fails the threshold, iterate on remaining flags. Maximum 3 rewrite iterations before presenting the best version and noting remaining issues.
