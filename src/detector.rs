@@ -3,9 +3,11 @@
 //! Wires check functions to configuration and produces scored results.
 //! No LLM calls — pure regex and string analysis.
 
+use std::collections::BTreeMap;
+
 use crate::checks::*;
 use crate::config::Config;
-use crate::models::{SlopFlag, SlopResult};
+use crate::models::{CheckScore, SlopFlag, SlopResult};
 
 type CheckFn = fn(&str, Option<&toml::Table>) -> Vec<SlopFlag>;
 
@@ -21,7 +23,7 @@ const DEFAULT_CHECKS: &[CheckDef] = &[
         func: check_lexical_blacklist,
         name: "lexical_blacklist",
         penalty_per_flag: 8,
-        max_penalty: 40,
+        max_penalty: 60,
     },
     CheckDef {
         func: check_em_dash_count,
@@ -71,6 +73,42 @@ const DEFAULT_CHECKS: &[CheckDef] = &[
         penalty_per_flag: 5,
         max_penalty: 15,
     },
+    CheckDef {
+        func: check_throat_clearing,
+        name: "throat_clearing",
+        penalty_per_flag: 8,
+        max_penalty: 24,
+    },
+    CheckDef {
+        func: check_chatbot_artifacts,
+        name: "chatbot_artifacts",
+        penalty_per_flag: 10,
+        max_penalty: 20,
+    },
+    CheckDef {
+        func: check_paragraph_uniformity,
+        name: "paragraph_uniformity",
+        penalty_per_flag: 15,
+        max_penalty: 15,
+    },
+    CheckDef {
+        func: check_emphasis_crutches,
+        name: "emphasis_crutches",
+        penalty_per_flag: 5,
+        max_penalty: 15,
+    },
+    CheckDef {
+        func: check_vague_attribution,
+        name: "vague_attribution",
+        penalty_per_flag: 5,
+        max_penalty: 15,
+    },
+    CheckDef {
+        func: check_wordiness,
+        name: "wordiness",
+        penalty_per_flag: 3,
+        max_penalty: 12,
+    },
 ];
 
 /// Resolved check with penalties (possibly overridden by config).
@@ -92,6 +130,7 @@ pub fn analyze(text: &str, slop_threshold: u32, config: Option<&Config>) -> Slop
             score: 0,
             flags: Vec::new(),
             passed: true,
+            check_scores: BTreeMap::new(),
         };
     }
 
@@ -122,6 +161,7 @@ pub fn analyze(text: &str, slop_threshold: u32, config: Option<&Config>) -> Slop
 
     let mut all_flags: Vec<SlopFlag> = Vec::new();
     let mut raw_penalty: u32 = 0;
+    let mut check_scores: BTreeMap<String, CheckScore> = BTreeMap::new();
 
     for check in &checks {
         // Get check-specific params from config
@@ -132,6 +172,18 @@ pub fn analyze(text: &str, slop_threshold: u32, config: Option<&Config>) -> Slop
         let flags = (check.func)(text, params);
         let contribution = (flags.len() as u32 * check.penalty_per_flag).min(check.max_penalty);
         raw_penalty += contribution;
+
+        if !flags.is_empty() {
+            check_scores.insert(
+                check.name.to_string(),
+                CheckScore {
+                    penalty: contribution,
+                    max: check.max_penalty,
+                    flags: flags.len() as u32,
+                },
+            );
+        }
+
         all_flags.extend(flags);
     }
 
@@ -142,6 +194,7 @@ pub fn analyze(text: &str, slop_threshold: u32, config: Option<&Config>) -> Slop
         score,
         flags: all_flags,
         passed: score < threshold,
+        check_scores,
     }
 }
 
@@ -254,12 +307,16 @@ mod tests {
             This stands as a pivotal moment, reflecting broader trends. \
             A pause\u{2014}another pause\u{2014}one more pause. \
             The summit concluded, reflecting the community's deep connection. \
+            Make no mistake about it. In order to succeed, many experts agree this is key. \
             \n\nFurthermore, we must note the following. \
             It's not a setback. It's an opportunity. \
+            Here's the thing: this matters. \
+            Great question! Feel free to ask more. \
             \n\nIn conclusion, this was groundbreaking. \
             The system is safe, efficient, and reliable. ";
 
         let uniform_block = vec!["The team worked on the project every single day."; 6].join(" ");
+
         let full_text = format!("{mega_slop}\n\n{uniform_block}");
 
         let result = analyze(&full_text, 30, None);
@@ -276,6 +333,12 @@ mod tests {
             "rule_of_three",
             "copulative_inflation",
             "burstiness",
+            "throat_clearing",
+            "chatbot_artifacts",
+            // paragraph_uniformity tested separately (requires all paragraphs uniform)
+            "emphasis_crutches",
+            "vague_attribution",
+            "wordiness",
         ];
 
         let missing: Vec<&&str> = expected

@@ -10,5 +10,5 @@ pub mod voice;
 
 pub use config::{load_config, Config};
 pub use detector::analyze;
-pub use models::{SlopFlag, SlopResult};
+pub use models::{CheckScore, SlopFlag, SlopResult};
 pub use voice::generate_voice_directive;

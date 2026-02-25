@@ -25,8 +25,10 @@ fn test_stdin_clean_text() {
 #[test]
 fn test_stdin_sloppy_text() {
     let text = "This groundbreaking initiative serves as a testament to the vibrant, robust, and crucial \
-                work being done by renowned experts. Furthermore, the tapestry of collaboration here is \
-                breathtaking, highlighting its potential.\n\nIn conclusion, we must delve deeper.";
+                work being done by renowned experts. Here's the thing: it's worth noting that the tapestry \
+                of collaboration here is breathtaking, highlighting its potential. Great question! I'd be happy \
+                to help explain. Furthermore, the paradigm shift is transformative.\n\n\
+                In conclusion, we must delve deeper. Make no mistake, many experts agree this matters.";
     cmd()
         .arg("analyze")
         .write_stdin(text)

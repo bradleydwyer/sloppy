@@ -25,10 +25,10 @@ struct Cli {
 
 #[derive(Subcommand)]
 enum Commands {
-    /// Analyze text for AI prose tells. Reads from FILE or stdin.
+    /// Analyze text for AI prose tells. Reads from FILE(s) or stdin.
     Analyze {
-        /// File to analyze (reads stdin if omitted)
-        file: Option<PathBuf>,
+        /// File(s) to analyze (reads stdin if omitted)
+        file: Vec<PathBuf>,
 
         /// Override pass/fail threshold
         #[arg(short, long)]
@@ -45,6 +45,10 @@ enum Commands {
         /// Disable a check by name (repeatable)
         #[arg(long)]
         disable: Vec<String>,
+
+        /// Run only this check (disables all others)
+        #[arg(long)]
+        only: Option<String>,
 
         /// Only print score and pass/fail
         #[arg(short, long)]
@@ -80,8 +84,9 @@ fn main() {
             config: config_path,
             format,
             disable,
+            only,
             quiet,
-        } => cmd_analyze(file, threshold, config_path, format, disable, quiet),
+        } => cmd_analyze(file, threshold, config_path, format, disable, only, quiet),
 
         Commands::Voice {
             config: config_path,
@@ -92,38 +97,14 @@ fn main() {
 }
 
 fn cmd_analyze(
-    file: Option<PathBuf>,
+    files: Vec<PathBuf>,
     threshold: Option<u32>,
     config_path: Option<PathBuf>,
     format: String,
     disable: Vec<String>,
+    only: Option<String>,
     quiet: bool,
 ) {
-    // Read input
-    let text = if let Some(path) = file {
-        std::fs::read_to_string(&path).unwrap_or_else(|e| {
-            eprintln!("Error reading {}: {e}", path.display());
-            process::exit(1);
-        })
-    } else {
-        if std::io::stdin().is_terminal() {
-            eprintln!("Reading from stdin (Ctrl+D to end)...");
-        }
-        let mut buf = String::new();
-        std::io::stdin()
-            .read_to_string(&mut buf)
-            .unwrap_or_else(|e| {
-                eprintln!("Error reading stdin: {e}",);
-                process::exit(1);
-            });
-        buf
-    };
-
-    if text.trim().is_empty() {
-        eprintln!("No text provided.");
-        process::exit(1);
-    }
-
     // Load config
     let mut config = if let Some(ref cp) = config_path {
         load_config(Some(cp.as_path()), None)
@@ -131,7 +112,14 @@ fn cmd_analyze(
         load_config(None, None)
     };
 
-    // Apply disabled checks
+    // Apply --only: disable everything except the named check
+    if let Some(ref only_name) = only {
+        for (name, cc) in config.checks.iter_mut() {
+            cc.enabled = name == only_name;
+        }
+    }
+
+    // Apply --disable
     for check_name in &disable {
         if let Some(cc) = config.checks.get_mut(check_name) {
             cc.enabled = false;
@@ -140,12 +128,89 @@ fn cmd_analyze(
 
     let effective_threshold = threshold.unwrap_or(config.threshold);
 
-    // Run analysis
-    let result = analyze(&text, effective_threshold, Some(&config));
+    if files.is_empty() {
+        // Read from stdin
+        if std::io::stdin().is_terminal() {
+            eprintln!("Reading from stdin (Ctrl+D to end)...");
+        }
+        let mut buf = String::new();
+        std::io::stdin()
+            .read_to_string(&mut buf)
+            .unwrap_or_else(|e| {
+                eprintln!("Error reading stdin: {e}");
+                process::exit(2);
+            });
 
-    // Output
+        if buf.trim().is_empty() {
+            eprintln!("No text provided.");
+            process::exit(2);
+        }
+
+        let result = analyze(&buf, effective_threshold, Some(&config));
+        print_result(&result, effective_threshold, &format, quiet, None);
+        process::exit(if result.passed { 0 } else { 1 });
+    } else if files.len() == 1 {
+        // Single file
+        let path = &files[0];
+        let text = std::fs::read_to_string(path).unwrap_or_else(|e| {
+            eprintln!("Error reading {}: {e}", path.display());
+            process::exit(2);
+        });
+
+        if text.trim().is_empty() {
+            eprintln!("No text provided.");
+            process::exit(2);
+        }
+
+        let result = analyze(&text, effective_threshold, Some(&config));
+        print_result(&result, effective_threshold, &format, quiet, None);
+        process::exit(if result.passed { 0 } else { 1 });
+    } else {
+        // Multiple files
+        let mut any_failed = false;
+        for path in &files {
+            let text = match std::fs::read_to_string(path) {
+                Ok(t) => t,
+                Err(e) => {
+                    eprintln!("Error reading {}: {e}", path.display());
+                    any_failed = true;
+                    continue;
+                }
+            };
+
+            if text.trim().is_empty() {
+                continue;
+            }
+
+            let result = analyze(&text, effective_threshold, Some(&config));
+            if !result.passed {
+                any_failed = true;
+            }
+            print_result(&result, effective_threshold, &format, quiet, Some(path));
+        }
+        process::exit(if any_failed { 1 } else { 0 });
+    }
+}
+
+fn print_result(
+    result: &slopcheck::SlopResult,
+    effective_threshold: u32,
+    format: &str,
+    quiet: bool,
+    file: Option<&PathBuf>,
+) {
+    let warnings = result
+        .flags
+        .iter()
+        .filter(|f| f.severity == "warning")
+        .count();
+    let infos = result.flags.iter().filter(|f| f.severity == "info").count();
+    let file_prefix = file
+        .map(|p| format!("{}: ", p.display()))
+        .unwrap_or_default();
+
     if format == "json" {
-        let output = json!({
+        let mut output = json!({
             "score": result.score,
             "threshold": effective_threshold,
             "passed": result.passed,
@@ -157,24 +222,42 @@ fn cmd_analyze(
                     "severity": f.severity,
                 })
             }).collect::<Vec<_>>(),
+            "check_scores": result.check_scores,
             "summary": {
                 "total_flags": result.flags.len(),
+                "warnings": warnings,
+                "info": infos,
                 "checks_triggered": result.flags.iter()
                     .map(|f| f.check_name.as_str())
                     .collect::<BTreeSet<_>>(),
             },
         });
+        if let Some(path) = file {
+            output["file"] = json!(path.display().to_string());
+        }
         println!("{}", serde_json::to_string_pretty(&output).unwrap());
     } else if quiet {
         let status = if result.passed { "PASS" } else { "FAIL" };
-        println!("Score: {}/100  {status}", result.score);
+        println!("{file_prefix}Score: {}/100  {status}", result.score);
     } else {
         let status = if result.passed { "PASS" } else { "FAIL" };
-        println!("Score: {}/100  {status}", result.score);
+        println!("{file_prefix}Score: {}/100  {status}", result.score);
         println!();
         if result.flags.is_empty() {
             println!("  No flags detected. Text looks clean.");
         } else {
+            // Per-check score breakdown
+            for (name, cs) in &result.check_scores {
+                println!(
+                    "  {name:24} {penalty:>3}/{max:<3}  ({flags} flag{s})",
+                    penalty = cs.penalty,
+                    max = cs.max,
+                    flags = cs.flags,
+                    s = if cs.flags == 1 { "" } else { "s" },
+                );
+            }
+            println!();
+            // Individual flags
             for flag in &result.flags {
                 let sev = format!("[{}]", flag.severity);
                 println!("  {sev:10} {}: {}", flag.check_name, flag.description);
@@ -183,17 +266,16 @@ fn cmd_analyze(
                 }
             }
             println!();
-            let checks_hit: BTreeSet<&str> =
-                result.flags.iter().map(|f| f.check_name.as_str()).collect();
             println!(
-                "{} flag(s) from {} check(s)",
+                "{} flag(s) from {} check(s): {} warning{}, {} info",
                 result.flags.len(),
-                checks_hit.len()
+                result.check_scores.len(),
+                warnings,
+                if warnings == 1 { "" } else { "s" },
+                infos,
             );
         }
     }
-
-    process::exit(if result.passed { 0 } else { 1 });
 }
 
 fn cmd_voice(config_path: Option<PathBuf>) {
@@ -211,7 +293,7 @@ fn cmd_config(dump: bool, init: bool) {
         let defaults = include_str!("defaults.toml");
         std::fs::write(target, defaults).unwrap_or_else(|e| {
             eprintln!("Error writing {target}: {e}");
-            process::exit(1);
+            process::exit(2);
         });
         println!("Created {target} from defaults. Edit to customize.");
         return;

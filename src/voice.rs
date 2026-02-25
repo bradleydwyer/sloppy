@@ -135,6 +135,16 @@ fn build_punctuation_section(config: &Config) -> String {
         }
     }
 
+    if let Some(wrd) = config.checks.get("wordiness") {
+        if wrd.enabled {
+            lines.push(
+                "- Cut wordy constructions: \"in order to\" -> \"to\", \"due to the fact that\" -> \"because\",\n  \
+                 \"at this point in time\" -> \"now\", \"the fact that\" -> (cut)."
+                    .to_string(),
+            );
+        }
+    }
+
     lines.join("\n")
 }
 
@@ -151,10 +161,15 @@ fn build_structure_section(config: &Config) -> String {
         }
     }
 
-    lines.push(
-        "- Paragraphs must be asymmetrical \u{2014} varying numbers of sentences, varying lengths."
-            .to_string(),
-    );
+    if let Some(pu) = config.checks.get("paragraph_uniformity") {
+        if pu.enabled {
+            lines.push(
+                "- Paragraphs must be asymmetrical: varying numbers of sentences, varying lengths.\n  \
+                 Never write four consecutive paragraphs of equal length."
+                    .to_string(),
+            );
+        }
+    }
 
     if let Some(neg) = config.checks.get("patterned_negation") {
         if neg.enabled {
@@ -165,7 +180,15 @@ fn build_structure_section(config: &Config) -> String {
         }
     }
 
-    lines.push("- No dramatic isolated fragments for false emphasis.".to_string());
+    if let Some(ec) = config.checks.get("emphasis_crutches") {
+        if ec.enabled {
+            lines.push(
+                "- No emphasis crutches: \"Full stop.\", \"Let that sink in.\", \"Make no mistake\".\n  \
+                 Show importance through content, not by announcing it."
+                    .to_string(),
+            );
+        }
+    }
 
     lines.join("\n")
 }
@@ -194,9 +217,36 @@ fn build_tone_section(config: &Config) -> String {
         }
     }
 
-    lines.push(
-        "- No sycophantic softeners (\"Great question!\", \"I'd be happy to...\").".to_string(),
-    );
+    if let Some(tc) = config.checks.get("throat_clearing") {
+        if tc.enabled {
+            lines.push(
+                "- No throat-clearing openers: \"Here's the thing:\", \"Let me be clear\",\n  \
+                 \"The truth is\", \"The reality is\". Start with the point."
+                    .to_string(),
+            );
+        }
+    }
+
+    if let Some(cb) = config.checks.get("chatbot_artifacts") {
+        if cb.enabled {
+            lines.push(
+                "- No chatbot artifacts: \"Great question!\", \"I'd be happy to\",\n  \
+                 \"Hope this helps\", \"Feel free to\", \"Certainly!\", \"Absolutely!\"."
+                    .to_string(),
+            );
+        }
+    }
+
+    if let Some(va) = config.checks.get("vague_attribution") {
+        if va.enabled {
+            lines.push(
+                "- No vague attribution: \"many experts agree\", \"studies show\", \"some critics argue\".\n  \
+                 Cite specific sources or make the claim directly."
+                    .to_string(),
+            );
+        }
+    }
+
     lines.push(
         "- Anchor writing in specific, unusual, concrete details rather than\n  \
          generic abstractions."

@@ -4,7 +4,7 @@ threshold = 30
 [checks.lexical_blacklist]
 enabled = true
 penalty_per_flag = 8
-max_penalty = 40
+max_penalty = 60
 severity = "warning"
 
 [checks.lexical_blacklist.words]
@@ -12,6 +12,15 @@ simple = [
     "delve", "tapestry", "testament", "vibrant", "robust", "crucial",
     "pivotal", "foster", "cultivate", "nestled", "boasts", "breathtaking",
     "groundbreaking", "showcasing", "renowned",
+    "leverage", "utilize", "facilitate", "harness", "illuminate",
+    "endeavor", "spearhead", "streamline", "catalyze", "encompass",
+    "exemplify", "embark", "empower", "bolster", "galvanize",
+    "solidify", "garner",
+    "beacon", "cornerstone", "linchpin", "paradigm", "synergy",
+    "seamless", "holistic", "noteworthy", "commendable", "meticulous",
+    "intricate",
+    "remarkable", "exceptional", "profound", "invaluable",
+    "indispensable", "paramount", "stunning", "multifaceted", "nuanced",
 ]
 
 [checks.lexical_blacklist.patterns]
@@ -27,6 +36,33 @@ entries = [
     ['\bshaping the evolving\b', "shaping the evolving"],
     ['\bmarking a pivotal\b', "marking a pivotal"],
     ['\bleaving an indelible mark\b', "leaving an indelible mark"],
+    ['\bit.s worth (?:noting|mentioning|remembering)\b', "it's worth noting"],
+    ['\bit.s important to (?:note|remember|consider)\b', "it's important to note"],
+    ['\bin today.s\b', "in today's [X]"],
+    ['\bat the end of the day\b', "at the end of the day"],
+    ['\bwhen it comes to\b', "when it comes to"],
+    ['\bplays? a (?:vital|significant|crucial|pivotal|key|important) role\b', "plays a [adjective] role"],
+    ['\blet.s (?:dive in|unpack|explore|break it down)\b', "let's dive in"],
+    ['\bat the forefront of\b', "at the forefront of"],
+    ['\brich cultural heritage\b', "rich cultural heritage"],
+    ['\b(?:enduring|lasting) (?:legacy|impact)\b', "enduring/lasting legacy"],
+    ['\bindelible mark\b', "indelible mark"],
+    ['\bharness the power of\b', "harness the power of"],
+    ['\bunlock(?:ing)? the potential\b', "unlocking the potential"],
+    ['\bempowering \w+ to\b', "empowering [X] to"],
+    ['\bsetting the stage for\b', "setting the stage for"],
+    ['\bkey turning point\b', "key turning point"],
+    ['\bwatershed moment\b', "watershed moment"],
+    ['\bparadigm shift\b', "paradigm shift"],
+    ['\bsteadfast (?:dedication|commitment)\b', "steadfast dedication"],
+    ['\bdeeply rooted\b', "deeply rooted"],
+    ['\bvaluable insights\b', "valuable insights"],
+    ['\bno discussion would be complete\b', "no discussion would be complete"],
+    ['\bnavigate\s+(?:the|this|these|those|a|an)\s+(?:landscape|complexit|challeng|world|terrain|realm)', "navigate (metaphorical)"],
+    ['\bgame[- ]chang(?:ing|er)\b', "game-changing"],
+    ['\bcutting[- ]edge\b', "cutting-edge"],
+    ['\brevolutionary\b', "revolutionary"],
+    ['\btransformative\b', "transformative"],
 ]
 
 [checks.em_dash_count]
@@ -56,6 +92,8 @@ severity = "warning"
 banned = [
     "Moreover", "Furthermore", "Additionally", "Consequently",
     "As a result", "In addition", "On the other hand",
+    "Notably", "Importantly", "Crucially", "Significantly",
+    "Interestingly", "That said", "That being said",
 ]
 
 [checks.burstiness]
@@ -88,10 +126,50 @@ openers = [
     "In summary", "In conclusion", "To summarize", "To conclude",
     "Overall", "Ultimately", "In closing", "Challenges and Future",
     "Looking ahead", "Moving forward", "In the end",
+    "Key takeaways", "Key takeaway", "In essence", "All in all",
+    "The bottom line",
 ]
 
 [checks.patterned_negation]
 enabled = true
 penalty_per_flag = 5
 max_penalty = 15
+severity = "info"
+
+[checks.throat_clearing]
+enabled = true
+penalty_per_flag = 8
+max_penalty = 24
+severity = "warning"
+
+[checks.chatbot_artifacts]
+enabled = true
+penalty_per_flag = 10
+max_penalty = 20
+severity = "warning"
+
+[checks.paragraph_uniformity]
+enabled = true
+penalty_per_flag = 15
+max_penalty = 15
+severity = "warning"
+std_dev_threshold = 1.0
+min_paragraphs = 4
+
+[checks.emphasis_crutches]
+enabled = true
+penalty_per_flag = 5
+max_penalty = 15
+severity = "info"
+
+[checks.vague_attribution]
+enabled = true
+penalty_per_flag = 5
+max_penalty = 15
+severity = "info"
+
+[checks.wordiness]
+enabled = true
+penalty_per_flag = 3
+max_penalty = 12
 severity = "info"

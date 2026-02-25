@@ -29,6 +29,14 @@ impl SlopFlag {
     }
 }
 
+/// Per-check penalty breakdown.
+#[derive(Debug, Clone, Serialize)]
+pub struct CheckScore {
+    pub penalty: u32,
+    pub max: u32,
+    pub flags: u32,
+}
+
 /// Aggregated result from running all slop checks on a text.
 #[derive(Debug, Serialize)]
 pub struct SlopResult {
@@ -38,4 +46,6 @@ pub struct SlopResult {
     pub flags: Vec<SlopFlag>,
     /// True when score < the configured threshold.
     pub passed: bool,
+    /// Per-check penalty breakdown.
+    pub check_scores: std::collections::BTreeMap<String, CheckScore>,
 }

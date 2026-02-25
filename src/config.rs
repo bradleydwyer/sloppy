@@ -197,7 +197,7 @@ mod tests {
         assert_eq!(config.threshold, 30);
         assert!(config.checks.contains_key("lexical_blacklist"));
         assert!(config.checks.contains_key("burstiness"));
-        assert_eq!(config.checks.len(), 9);
+        assert_eq!(config.checks.len(), 15);
     }
 
     #[test]

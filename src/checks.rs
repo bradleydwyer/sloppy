@@ -643,6 +643,522 @@ pub fn check_patterned_negation(text: &str, params: Option<&toml::Table>) -> Vec
     flags
 }
 
+// ---------------------------------------------------------------------------
+// 10. Throat-clearing openers
+// ---------------------------------------------------------------------------
+
+struct ThroatClearingPattern {
+    regex: Regex,
+    label: &'static str,
+}
+
+static DEFAULT_THROAT_CLEARING_PATTERNS: LazyLock<Vec<ThroatClearingPattern>> =
+    LazyLock::new(|| {
+        vec![
+            ThroatClearingPattern {
+                regex: Regex::new(r"(?i)\bhere.s the (?:thing|catch|bind|problem)\b").unwrap(),
+                label: "Here's the thing",
+            },
+            ThroatClearingPattern {
+                regex: Regex::new(r"(?i)\bhere.s what I (?:mean|find interesting)\b").unwrap(),
+                label: "Here's what I mean",
+            },
+            ThroatClearingPattern {
+                regex: Regex::new(r"(?i)\blet me (?:be clear|explain)\b").unwrap(),
+                label: "Let me be clear",
+            },
+            ThroatClearingPattern {
+                regex: Regex::new(r"(?i)\bthe (?:uncomfortable )?truth is\b").unwrap(),
+                label: "The truth is",
+            },
+            ThroatClearingPattern {
+                regex: Regex::new(r"(?i)\bthe reality is\b").unwrap(),
+                label: "The reality is",
+            },
+            ThroatClearingPattern {
+                regex: Regex::new(r"(?i)(?:^|\.\s+)It turns out\b").unwrap(),
+                label: "It turns out",
+            },
+            ThroatClearingPattern {
+                regex: Regex::new(r"(?i)\bcan we talk about\b").unwrap(),
+                label: "Can we talk about",
+            },
+            ThroatClearingPattern {
+                regex: Regex::new(r"(?i)\bthink about it[.:]\b?").unwrap(),
+                label: "Think about it",
+            },
+            ThroatClearingPattern {
+                regex: Regex::new(r"(?i)\bconsider this[.:]\b?").unwrap(),
+                label: "Consider this",
+            },
+            ThroatClearingPattern {
+                regex: Regex::new(r"(?i)\band that.s okay\.\s*$").unwrap(),
+                label: "And that's okay.",
+            },
+            ThroatClearingPattern {
+                regex: Regex::new(r"(?i)\bbut here.s the (?:thing|catch|bind|kicker)\b").unwrap(),
+                label: "But here's the thing",
+            },
+            ThroatClearingPattern {
+                regex: Regex::new(r"(?i)\blet.s (?:be honest|be real|face it)\b").unwrap(),
+                label: "Let's be honest",
+            },
+        ]
+    });
+
+pub fn check_throat_clearing(text: &str, params: Option<&toml::Table>) -> Vec<SlopFlag> {
+    let mut flags = Vec::new();
+
+    if let Some(raw_patterns) = params
+        .and_then(|p| p.get("patterns"))
+        .and_then(|v| v.as_array())
+    {
+        for entry in raw_patterns {
+            if let Some(arr) = entry.as_array() {
+                if arr.len() >= 2 {
+                    if let (Some(pat), Some(label)) = (arr[0].as_str(), arr[1].as_str()) {
+                        if let Ok(re) = Regex::new(&format!("(?i){pat}")) {
+                            for m in re.find_iter(text) {
+                                let snippet = snippet_around(text, m.start(), m.end(), 20);
+                                flags.push(SlopFlag::warning(
+                                    "throat_clearing",
+                                    &format!("Throat-clearing opener \"{label}\" detected"),
+                                    &format!("...\"{}\"...", snippet),
+                                ));
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    } else {
+        for tc in DEFAULT_THROAT_CLEARING_PATTERNS.iter() {
+            for m in tc.regex.find_iter(text) {
+                let snippet = snippet_around(text, m.start(), m.end(), 20);
+                flags.push(SlopFlag::warning(
+                    "throat_clearing",
+                    &format!("Throat-clearing opener \"{}\" detected", tc.label),
+                    &format!("...\"{}\"...", snippet),
+                ));
+            }
+        }
+    }
+
+    flags
+}
+
+// ---------------------------------------------------------------------------
+// 11. Chatbot artifacts
+// ---------------------------------------------------------------------------
+
+struct ChatbotPattern {
+    regex: Regex,
+    label: &'static str,
+}
+
+static DEFAULT_CHATBOT_PATTERNS: LazyLock<Vec<ChatbotPattern>> = LazyLock::new(|| {
+    vec![
+        ChatbotPattern {
+            regex: Regex::new(r"(?i)\b(?:great|excellent|wonderful|fantastic) question\b").unwrap(),
+            label: "Great question!",
+        },
+        ChatbotPattern {
+            regex: Regex::new(
+                r"(?i)\bthat.s a (?:great|excellent|good|interesting) (?:question|point)\b",
+            )
+            .unwrap(),
+            label: "That's a great question",
+        },
+        ChatbotPattern {
+            regex: Regex::new(r"(?i)\bI.(?:d|would) be (?:happy|glad|delighted) to\b").unwrap(),
+            label: "I'd be happy to",
+        },
+        ChatbotPattern {
+            regex: Regex::new(r"(?i)\b(?:I )?hope (?:this|that) helps\b").unwrap(),
+            label: "Hope this helps",
+        },
+        ChatbotPattern {
+            regex: Regex::new(r"(?i)\blet me know if you\b").unwrap(),
+            label: "Let me know if you",
+        },
+        ChatbotPattern {
+            regex: Regex::new(r"(?i)\bfeel free to\b").unwrap(),
+            label: "Feel free to",
+        },
+        ChatbotPattern {
+            regex: Regex::new(r"(?i)(?:^|\.\s+)(?:Certainly|Absolutely)!\s").unwrap(),
+            label: "Certainly!/Absolutely!",
+        },
+        ChatbotPattern {
+            regex: Regex::new(r"(?i)\bas an AI\b").unwrap(),
+            label: "As an AI",
+        },
+        ChatbotPattern {
+            regex: Regex::new(r"(?i)\bas a language model\b").unwrap(),
+            label: "As a language model",
+        },
+        ChatbotPattern {
+            regex: Regex::new(r"(?i)\bhappy to help\b").unwrap(),
+            label: "Happy to help",
+        },
+    ]
+});
+
+pub fn check_chatbot_artifacts(text: &str, params: Option<&toml::Table>) -> Vec<SlopFlag> {
+    let mut flags = Vec::new();
+
+    if let Some(raw_patterns) = params
+        .and_then(|p| p.get("patterns"))
+        .and_then(|v| v.as_array())
+    {
+        for entry in raw_patterns {
+            if let Some(arr) = entry.as_array() {
+                if arr.len() >= 2 {
+                    if let (Some(pat), Some(label)) = (arr[0].as_str(), arr[1].as_str()) {
+                        if let Ok(re) = Regex::new(&format!("(?i){pat}")) {
+                            for m in re.find_iter(text) {
+                                let snippet = snippet_around(text, m.start(), m.end(), 20);
+                                flags.push(SlopFlag::warning(
+                                    "chatbot_artifacts",
+                                    &format!("Chatbot artifact \"{label}\" detected"),
+                                    &format!("...\"{}\"...", snippet),
+                                ));
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    } else {
+        for cp in DEFAULT_CHATBOT_PATTERNS.iter() {
+            for m in cp.regex.find_iter(text) {
+                let snippet = snippet_around(text, m.start(), m.end(), 20);
+                flags.push(SlopFlag::warning(
+                    "chatbot_artifacts",
+                    &format!("Chatbot artifact \"{}\" detected", cp.label),
+                    &format!("...\"{}\"...", snippet),
+                ));
+            }
+        }
+    }
+
+    flags
+}
+
+// ---------------------------------------------------------------------------
+// 12. Paragraph uniformity
+// ---------------------------------------------------------------------------
+
+pub fn check_paragraph_uniformity(text: &str, params: Option<&toml::Table>) -> Vec<SlopFlag> {
+    let threshold = params
+        .and_then(|p| p.get("std_dev_threshold"))
+        .and_then(|v| v.as_float())
+        .unwrap_or(1.0);
+    let min_paragraphs = params
+        .and_then(|p| p.get("min_paragraphs"))
+        .and_then(|v| v.as_integer())
+        .unwrap_or(4) as usize;
+
+    let paragraphs: Vec<&str> = text
+        .split("\n\n")
+        .map(|p| p.trim())
+        .filter(|p| !p.is_empty())
+        .collect();
+
+    if paragraphs.len() < min_paragraphs {
+        return Vec::new();
+    }
+
+    let counts: Vec<f64> = paragraphs
+        .iter()
+        .map(|p| sentences(p).len() as f64)
+        .collect();
+    let n = counts.len() as f64;
+    let mean = counts.iter().sum::<f64>() / n;
+    let variance = counts.iter().map(|c| (c - mean).powi(2)).sum::<f64>() / (n - 1.0);
+    let std_dev = variance.sqrt();
+
+    if std_dev >= threshold {
+        return Vec::new();
+    }
+
+    vec![SlopFlag::warning(
+        "paragraph_uniformity",
+        &format!(
+            "Paragraph lengths too uniform (std dev {std_dev:.1} < {threshold}). \
+             Mean {mean:.1} sentences across {} paragraphs.",
+            paragraphs.len()
+        ),
+        "",
+    )]
+}
+
+// ---------------------------------------------------------------------------
+// 13. Emphasis crutches
+// ---------------------------------------------------------------------------
+
+struct EmphasisPattern {
+    regex: Regex,
+    label: &'static str,
+}
+
+static DEFAULT_EMPHASIS_PATTERNS: LazyLock<Vec<EmphasisPattern>> = LazyLock::new(|| {
+    vec![
+        EmphasisPattern {
+            regex: Regex::new(r"(?i)\bFull stop\.\s").unwrap(),
+            label: "Full stop.",
+        },
+        EmphasisPattern {
+            regex: Regex::new(r"(?i)(?:^|\.\s+)Period\.\s").unwrap(),
+            label: "Period.",
+        },
+        EmphasisPattern {
+            regex: Regex::new(r"(?i)\bLet that sink in\.").unwrap(),
+            label: "Let that sink in.",
+        },
+        EmphasisPattern {
+            regex: Regex::new(r"(?i)\bMake no mistake\b").unwrap(),
+            label: "Make no mistake",
+        },
+        EmphasisPattern {
+            regex: Regex::new(r"(?i)\bThis matters because\b").unwrap(),
+            label: "This matters because",
+        },
+        EmphasisPattern {
+            regex: Regex::new(r"(?i)\w+\.\s+That.s it\.\s+That.s the\b").unwrap(),
+            label: "X. That's it. That's the Y.",
+        },
+    ]
+});
+
+pub fn check_emphasis_crutches(text: &str, params: Option<&toml::Table>) -> Vec<SlopFlag> {
+    let mut flags = Vec::new();
+
+    if let Some(raw_patterns) = params
+        .and_then(|p| p.get("patterns"))
+        .and_then(|v| v.as_array())
+    {
+        for entry in raw_patterns {
+            if let Some(arr) = entry.as_array() {
+                if arr.len() >= 2 {
+                    if let (Some(pat), Some(label)) = (arr[0].as_str(), arr[1].as_str()) {
+                        if let Ok(re) = Regex::new(&format!("(?i){pat}")) {
+                            for m in re.find_iter(text) {
+                                let snippet = snippet_around(text, m.start(), m.end(), 20);
+                                flags.push(SlopFlag::info(
+                                    "emphasis_crutches",
+                                    &format!("Emphasis crutch \"{label}\" detected"),
+                                    &format!("...\"{}\"...", snippet),
+                                ));
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    } else {
+        for ep in DEFAULT_EMPHASIS_PATTERNS.iter() {
+            for m in ep.regex.find_iter(text) {
+                let snippet = snippet_around(text, m.start(), m.end(), 20);
+                flags.push(SlopFlag::info(
+                    "emphasis_crutches",
+                    &format!("Emphasis crutch \"{}\" detected", ep.label),
+                    &format!("...\"{}\"...", snippet),
+                ));
+            }
+        }
+    }
+
+    flags
+}
+
+// ---------------------------------------------------------------------------
+// 14. Vague attribution
+// ---------------------------------------------------------------------------
+
+struct AttributionPattern {
+    regex: Regex,
+    label: &'static str,
+}
+
+static DEFAULT_ATTRIBUTION_PATTERNS: LazyLock<Vec<AttributionPattern>> = LazyLock::new(|| {
+    vec![
+        AttributionPattern {
+            regex: Regex::new(r"(?i)\bmany experts (?:agree|say|believe)\b").unwrap(),
+            label: "many experts agree",
+        },
+        AttributionPattern {
+            regex: Regex::new(r"(?i)\bexperts (?:say|suggest|note|agree|believe)\b").unwrap(),
+            label: "experts say",
+        },
+        AttributionPattern {
+            regex: Regex::new(r"(?i)\bsome (?:experts|critics|observers|analysts)\b").unwrap(),
+            label: "some experts",
+        },
+        AttributionPattern {
+            regex: Regex::new(
+                r"(?i)\b(?:studies|research) (?:show|shows|suggest|suggests|indicate|indicates)\b",
+            )
+            .unwrap(),
+            label: "studies show",
+        },
+        AttributionPattern {
+            regex: Regex::new(r"(?i)\bindustry (?:reports?|experts?|analysts?) suggest\b").unwrap(),
+            label: "industry reports suggest",
+        },
+        AttributionPattern {
+            regex: Regex::new(
+                r"(?i)\bit is (?:widely|generally) (?:believed|accepted|acknowledged)\b",
+            )
+            .unwrap(),
+            label: "it is widely believed",
+        },
+        AttributionPattern {
+            regex: Regex::new(r"(?i)\bobservers have (?:noted|cited)\b").unwrap(),
+            label: "observers have noted",
+        },
+    ]
+});
+
+pub fn check_vague_attribution(text: &str, params: Option<&toml::Table>) -> Vec<SlopFlag> {
+    let mut flags = Vec::new();
+
+    if let Some(raw_patterns) = params
+        .and_then(|p| p.get("patterns"))
+        .and_then(|v| v.as_array())
+    {
+        for entry in raw_patterns {
+            if let Some(arr) = entry.as_array() {
+                if arr.len() >= 2 {
+                    if let (Some(pat), Some(label)) = (arr[0].as_str(), arr[1].as_str()) {
+                        if let Ok(re) = Regex::new(&format!("(?i){pat}")) {
+                            for m in re.find_iter(text) {
+                                let snippet = snippet_around(text, m.start(), m.end(), 20);
+                                flags.push(SlopFlag::info(
+                                    "vague_attribution",
+                                    &format!(
+                                        "Vague attribution \"{label}\" — cite a specific source"
+                                    ),
+                                    &format!("...\"{}\"...", snippet),
+                                ));
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    } else {
+        for ap in DEFAULT_ATTRIBUTION_PATTERNS.iter() {
+            for m in ap.regex.find_iter(text) {
+                let snippet = snippet_around(text, m.start(), m.end(), 20);
+                flags.push(SlopFlag::info(
+                    "vague_attribution",
+                    &format!(
+                        "Vague attribution \"{}\" — cite a specific source",
+                        ap.label
+                    ),
+                    &format!("...\"{}\"...", snippet),
+                ));
+            }
+        }
+    }
+
+    flags
+}
+
+// ---------------------------------------------------------------------------
+// 15. Wordiness
+// ---------------------------------------------------------------------------
+
+struct WordinessPattern {
+    regex: Regex,
+    label: &'static str,
+    suggestion: &'static str,
+}
+
+static DEFAULT_WORDINESS_PATTERNS: LazyLock<Vec<WordinessPattern>> = LazyLock::new(|| {
+    vec![
+        WordinessPattern {
+            regex: Regex::new(r"(?i)\bin order to\b").unwrap(),
+            label: "in order to",
+            suggestion: "to",
+        },
+        WordinessPattern {
+            regex: Regex::new(r"(?i)\bdue to the fact that\b").unwrap(),
+            label: "due to the fact that",
+            suggestion: "because",
+        },
+        WordinessPattern {
+            regex: Regex::new(r"(?i)\bat this point in time\b").unwrap(),
+            label: "at this point in time",
+            suggestion: "now",
+        },
+        WordinessPattern {
+            regex: Regex::new(r"(?i)\bfor the purpose of\b").unwrap(),
+            label: "for the purpose of",
+            suggestion: "to/for",
+        },
+        WordinessPattern {
+            regex: Regex::new(r"(?i)\ba large number of\b").unwrap(),
+            label: "a large number of",
+            suggestion: "many",
+        },
+        WordinessPattern {
+            regex: Regex::new(r"(?i)\bit should be noted that\b").unwrap(),
+            label: "it should be noted that",
+            suggestion: "(cut)",
+        },
+        WordinessPattern {
+            regex: Regex::new(r"(?i)\bthe fact that\b").unwrap(),
+            label: "the fact that",
+            suggestion: "(cut or rephrase)",
+        },
+    ]
+});
+
+pub fn check_wordiness(text: &str, params: Option<&toml::Table>) -> Vec<SlopFlag> {
+    let mut flags = Vec::new();
+
+    if let Some(raw_patterns) = params
+        .and_then(|p| p.get("patterns"))
+        .and_then(|v| v.as_array())
+    {
+        for entry in raw_patterns {
+            if let Some(arr) = entry.as_array() {
+                if arr.len() >= 3 {
+                    if let (Some(pat), Some(label), Some(sug)) =
+                        (arr[0].as_str(), arr[1].as_str(), arr[2].as_str())
+                    {
+                        if let Ok(re) = Regex::new(&format!("(?i){pat}")) {
+                            for m in re.find_iter(text) {
+                                let snippet = snippet_around(text, m.start(), m.end(), 15);
+                                flags.push(SlopFlag::info(
+                                    "wordiness",
+                                    &format!("\"{label}\" — try \"{sug}\""),
+                                    &format!("...\"{}\"...", snippet),
+                                ));
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    } else {
+        for wp in DEFAULT_WORDINESS_PATTERNS.iter() {
+            for m in wp.regex.find_iter(text) {
+                let snippet = snippet_around(text, m.start(), m.end(), 15);
+                flags.push(SlopFlag::info(
+                    "wordiness",
+                    &format!("\"{}\" — try \"{}\"", wp.label, wp.suggestion),
+                    &format!("...\"{}\"...", snippet),
+                ));
+            }
+        }
+    }
+
+    flags
+}
+
 // ===========================================================================
 // Tests
 // ===========================================================================
@@ -1202,5 +1718,273 @@ mod tests {
     fn test_patterned_negation_check_name() {
         let flags = check_patterned_negation("It's not broken. It's character.", None);
         assert!(flags.iter().all(|f| f.check_name == "patterned_negation"));
+    }
+
+    // --- Throat-clearing openers ---
+
+    #[test]
+    fn test_detects_heres_the_thing() {
+        let flags = check_throat_clearing("Here's the thing: nobody cares.", None);
+        assert!(!flags.is_empty());
+    }
+
+    #[test]
+    fn test_detects_let_me_be_clear() {
+        let flags = check_throat_clearing("Let me be clear about this.", None);
+        assert!(!flags.is_empty());
+    }
+
+    #[test]
+    fn test_detects_the_truth_is() {
+        let flags = check_throat_clearing("The truth is, nobody expected this.", None);
+        assert!(!flags.is_empty());
+    }
+
+    #[test]
+    fn test_detects_the_reality_is() {
+        let flags = check_throat_clearing("The reality is that budgets are tight.", None);
+        assert!(!flags.is_empty());
+    }
+
+    #[test]
+    fn test_detects_but_heres_the_thing() {
+        let flags = check_throat_clearing("But here's the thing about that.", None);
+        assert!(!flags.is_empty());
+    }
+
+    #[test]
+    fn test_detects_lets_be_honest() {
+        let flags = check_throat_clearing("Let's be honest about this.", None);
+        assert!(!flags.is_empty());
+    }
+
+    #[test]
+    fn test_clean_text_passes_throat() {
+        let flags = check_throat_clearing(
+            "She found the receipt. The amount was seven dollars. She put it back.",
+            None,
+        );
+        assert!(flags.is_empty());
+    }
+
+    #[test]
+    fn test_throat_clearing_check_name() {
+        let flags = check_throat_clearing("Here's the thing: it matters.", None);
+        assert!(flags.iter().all(|f| f.check_name == "throat_clearing"));
+    }
+
+    // --- Chatbot artifacts ---
+
+    #[test]
+    fn test_detects_great_question() {
+        let flags = check_chatbot_artifacts("Great question! Let me explain.", None);
+        assert!(!flags.is_empty());
+    }
+
+    #[test]
+    fn test_detects_thats_a_great_question() {
+        let flags = check_chatbot_artifacts("That's a great question to ask.", None);
+        assert!(!flags.is_empty());
+    }
+
+    #[test]
+    fn test_detects_id_be_happy_to() {
+        let flags = check_chatbot_artifacts("I'd be happy to help with that.", None);
+        assert!(!flags.is_empty());
+    }
+
+    #[test]
+    fn test_detects_hope_this_helps() {
+        let flags = check_chatbot_artifacts("I hope this helps with your project.", None);
+        assert!(!flags.is_empty());
+    }
+
+    #[test]
+    fn test_detects_feel_free_to() {
+        let flags = check_chatbot_artifacts("Feel free to reach out.", None);
+        assert!(!flags.is_empty());
+    }
+
+    #[test]
+    fn test_detects_as_an_ai() {
+        let flags = check_chatbot_artifacts("As an AI, I cannot do that.", None);
+        assert!(!flags.is_empty());
+    }
+
+    #[test]
+    fn test_detects_certainly_excl() {
+        let flags = check_chatbot_artifacts("Certainly! Here is the answer.", None);
+        assert!(!flags.is_empty());
+    }
+
+    #[test]
+    fn test_detects_let_me_know() {
+        let flags = check_chatbot_artifacts("Let me know if you have questions.", None);
+        assert!(!flags.is_empty());
+    }
+
+    #[test]
+    fn test_clean_text_passes_chatbot() {
+        let flags = check_chatbot_artifacts(
+            "She found the receipt. The amount was seven dollars. She put it back.",
+            None,
+        );
+        assert!(flags.is_empty());
+    }
+
+    #[test]
+    fn test_chatbot_artifacts_check_name() {
+        let flags = check_chatbot_artifacts("Great question! Thanks for asking.", None);
+        assert!(flags.iter().all(|f| f.check_name == "chatbot_artifacts"));
+    }
+
+    // --- Paragraph uniformity ---
+
+    #[test]
+    fn test_uniform_paragraphs_flagged() {
+        let text = "First sentence here. Second one too. Third as well.\n\n\
+                     Another first here. Another second. Another third.\n\n\
+                     Yet another first. Yet another second. Yet another third.\n\n\
+                     Final first sentence. Final second here. Final third one.";
+        let flags = check_paragraph_uniformity(text, None);
+        assert!(!flags.is_empty());
+    }
+
+    #[test]
+    fn test_varied_paragraphs_pass() {
+        let text = "Short.\n\n\
+                     This paragraph is much longer and has several sentences in it. \
+                     It covers more ground. It explains things in detail. And then some.\n\n\
+                     Medium length here. Two sentences.\n\n\
+                     Another single-sentence paragraph but this one is pretty long and has lots of words in it.";
+        let flags = check_paragraph_uniformity(text, None);
+        assert!(flags.is_empty());
+    }
+
+    #[test]
+    fn test_fewer_than_four_paragraphs_skipped() {
+        let text = "One paragraph.\n\nTwo paragraphs.\n\nThree paragraphs.";
+        assert!(check_paragraph_uniformity(text, None).is_empty());
+    }
+
+    #[test]
+    fn test_paragraph_uniformity_check_name() {
+        let text = "A. B. C.\n\nD. E. F.\n\nG. H. I.\n\nJ. K. L.";
+        let flags = check_paragraph_uniformity(text, None);
+        assert!(flags.iter().all(|f| f.check_name == "paragraph_uniformity"));
+    }
+
+    // --- Emphasis crutches ---
+
+    #[test]
+    fn test_detects_full_stop() {
+        let flags =
+            check_emphasis_crutches("This is non-negotiable. Full stop. We must act.", None);
+        assert!(!flags.is_empty());
+    }
+
+    #[test]
+    fn test_detects_let_that_sink_in() {
+        let flags = check_emphasis_crutches("We lost everything. Let that sink in.", None);
+        assert!(!flags.is_empty());
+    }
+
+    #[test]
+    fn test_detects_make_no_mistake() {
+        let flags = check_emphasis_crutches("Make no mistake, this changes everything.", None);
+        assert!(!flags.is_empty());
+    }
+
+    #[test]
+    fn test_clean_text_passes_emphasis() {
+        let flags = check_emphasis_crutches(
+            "She found the receipt. The amount was seven dollars. She put it back.",
+            None,
+        );
+        assert!(flags.is_empty());
+    }
+
+    #[test]
+    fn test_emphasis_crutches_check_name() {
+        let flags = check_emphasis_crutches("Make no mistake about this.", None);
+        assert!(flags.iter().all(|f| f.check_name == "emphasis_crutches"));
+    }
+
+    // --- Vague attribution ---
+
+    #[test]
+    fn test_detects_many_experts_agree() {
+        let flags = check_vague_attribution("Many experts agree this is a problem.", None);
+        assert!(!flags.is_empty());
+    }
+
+    #[test]
+    fn test_detects_studies_show() {
+        let flags = check_vague_attribution("Studies show that sleep is important.", None);
+        assert!(!flags.is_empty());
+    }
+
+    #[test]
+    fn test_detects_some_critics() {
+        let flags = check_vague_attribution("Some critics have questioned this approach.", None);
+        assert!(!flags.is_empty());
+    }
+
+    #[test]
+    fn test_detects_widely_believed() {
+        let flags = check_vague_attribution("It is widely believed that this is true.", None);
+        assert!(!flags.is_empty());
+    }
+
+    #[test]
+    fn test_clean_text_passes_attribution() {
+        let flags = check_vague_attribution(
+            "A 2023 Stanford study by Chen et al. found a 40% improvement.",
+            None,
+        );
+        assert!(flags.is_empty());
+    }
+
+    #[test]
+    fn test_vague_attribution_check_name() {
+        let flags = check_vague_attribution("Many experts agree on this.", None);
+        assert!(flags.iter().all(|f| f.check_name == "vague_attribution"));
+    }
+
+    // --- Wordiness ---
+
+    #[test]
+    fn test_detects_in_order_to() {
+        let flags = check_wordiness("In order to succeed, you must try.", None);
+        assert!(!flags.is_empty());
+        assert!(flags[0].description.contains("to"));
+    }
+
+    #[test]
+    fn test_detects_due_to_the_fact_that() {
+        let flags = check_wordiness("Due to the fact that it rained, we stayed in.", None);
+        assert!(!flags.is_empty());
+        assert!(flags[0].description.contains("because"));
+    }
+
+    #[test]
+    fn test_detects_at_this_point_in_time() {
+        let flags = check_wordiness("At this point in time, we are ready.", None);
+        assert!(!flags.is_empty());
+    }
+
+    #[test]
+    fn test_clean_text_passes_wordiness() {
+        let flags = check_wordiness(
+            "To succeed, try harder. Because it rained, we stayed.",
+            None,
+        );
+        assert!(flags.is_empty());
+    }
+
+    #[test]
+    fn test_wordiness_check_name() {
+        let flags = check_wordiness("In order to finish, we worked late.", None);
+        assert!(flags.iter().all(|f| f.check_name == "wordiness"));
     }
 }
