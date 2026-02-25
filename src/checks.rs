@@ -200,10 +200,10 @@ fn build_word_patterns(params: &toml::Table) -> Vec<(Regex, String)> {
         .and_then(|s| s.as_array())
     {
         for word in words {
-            if let Some(w) = word.as_str() {
-                if let Ok(re) = Regex::new(&format!(r"(?i)\b{}\b", regex::escape(w))) {
-                    patterns.push((re, w.to_string()));
-                }
+            if let Some(w) = word.as_str()
+                && let Ok(re) = Regex::new(&format!(r"(?i)\b{}\b", regex::escape(w)))
+            {
+                patterns.push((re, w.to_string()));
             }
         }
     }
@@ -216,14 +216,12 @@ fn build_word_patterns(params: &toml::Table) -> Vec<(Regex, String)> {
         .and_then(|e| e.as_array())
     {
         for entry in entries {
-            if let Some(arr) = entry.as_array() {
-                if arr.len() >= 2 {
-                    if let (Some(pat), Some(label)) = (arr[0].as_str(), arr[1].as_str()) {
-                        if let Ok(re) = Regex::new(&format!("(?i){pat}")) {
-                            patterns.push((re, label.to_string()));
-                        }
-                    }
-                }
+            if let Some(arr) = entry.as_array()
+                && arr.len() >= 2
+                && let (Some(pat), Some(label)) = (arr[0].as_str(), arr[1].as_str())
+                && let Ok(re) = Regex::new(&format!("(?i){pat}"))
+            {
+                patterns.push((re, label.to_string()));
             }
         }
     }
@@ -460,22 +458,18 @@ pub fn check_copulative_inflation(text: &str, params: Option<&toml::Table>) -> V
         .and_then(|v| v.as_array())
     {
         for entry in raw_patterns {
-            if let Some(arr) = entry.as_array() {
-                if arr.len() >= 2 {
-                    if let (Some(pat), Some(label)) = (arr[0].as_str(), arr[1].as_str()) {
-                        if let Ok(re) = Regex::new(&format!("(?i){pat}")) {
-                            for m in re.find_iter(text) {
-                                let snippet = snippet_around(text, m.start(), m.end(), 15);
-                                flags.push(SlopFlag::info(
-                                    "copulative_inflation",
-                                    &format!(
-                                        "Copulative inflation \"{label}\" — prefer \"is/are\""
-                                    ),
-                                    &format!("...\"{}\"...", snippet),
-                                ));
-                            }
-                        }
-                    }
+            if let Some(arr) = entry.as_array()
+                && arr.len() >= 2
+                && let (Some(pat), Some(label)) = (arr[0].as_str(), arr[1].as_str())
+                && let Ok(re) = Regex::new(&format!("(?i){pat}"))
+            {
+                for m in re.find_iter(text) {
+                    let snippet = snippet_around(text, m.start(), m.end(), 15);
+                    flags.push(SlopFlag::info(
+                        "copulative_inflation",
+                        &format!("Copulative inflation \"{label}\" — prefer \"is/are\""),
+                        &format!("...\"{}\"...", snippet),
+                    ));
                 }
             }
         }
@@ -600,25 +594,23 @@ pub fn check_patterned_negation(text: &str, params: Option<&toml::Table>) -> Vec
         .and_then(|v| v.as_array())
     {
         for entry in raw_patterns {
-            if let Some(arr) = entry.as_array() {
-                if arr.len() >= 2 {
-                    if let (Some(pat), Some(label)) = (arr[0].as_str(), arr[1].as_str()) {
-                        if let Ok(re) = Regex::new(&format!("(?i){pat}")) {
-                            for m in re.find_iter(text) {
-                                let snippet: String = m
-                                    .as_str()
-                                    .chars()
-                                    .take(80)
-                                    .collect::<String>()
-                                    .replace('\n', " ");
-                                flags.push(SlopFlag::info(
-                                    "patterned_negation",
-                                    &format!("Patterned negation \"{label}\" detected"),
-                                    &format!("\"{}\"", snippet),
-                                ));
-                            }
-                        }
-                    }
+            if let Some(arr) = entry.as_array()
+                && arr.len() >= 2
+                && let (Some(pat), Some(label)) = (arr[0].as_str(), arr[1].as_str())
+                && let Ok(re) = Regex::new(&format!("(?i){pat}"))
+            {
+                for m in re.find_iter(text) {
+                    let snippet: String = m
+                        .as_str()
+                        .chars()
+                        .take(80)
+                        .collect::<String>()
+                        .replace('\n', " ");
+                    flags.push(SlopFlag::info(
+                        "patterned_negation",
+                        &format!("Patterned negation \"{label}\" detected"),
+                        &format!("\"{}\"", snippet),
+                    ));
                 }
             }
         }
@@ -714,20 +706,18 @@ pub fn check_throat_clearing(text: &str, params: Option<&toml::Table>) -> Vec<Sl
         .and_then(|v| v.as_array())
     {
         for entry in raw_patterns {
-            if let Some(arr) = entry.as_array() {
-                if arr.len() >= 2 {
-                    if let (Some(pat), Some(label)) = (arr[0].as_str(), arr[1].as_str()) {
-                        if let Ok(re) = Regex::new(&format!("(?i){pat}")) {
-                            for m in re.find_iter(text) {
-                                let snippet = snippet_around(text, m.start(), m.end(), 20);
-                                flags.push(SlopFlag::warning(
-                                    "throat_clearing",
-                                    &format!("Throat-clearing opener \"{label}\" detected"),
-                                    &format!("...\"{}\"...", snippet),
-                                ));
-                            }
-                        }
-                    }
+            if let Some(arr) = entry.as_array()
+                && arr.len() >= 2
+                && let (Some(pat), Some(label)) = (arr[0].as_str(), arr[1].as_str())
+                && let Ok(re) = Regex::new(&format!("(?i){pat}"))
+            {
+                for m in re.find_iter(text) {
+                    let snippet = snippet_around(text, m.start(), m.end(), 20);
+                    flags.push(SlopFlag::warning(
+                        "throat_clearing",
+                        &format!("Throat-clearing opener \"{label}\" detected"),
+                        &format!("...\"{}\"...", snippet),
+                    ));
                 }
             }
         }
@@ -812,20 +802,18 @@ pub fn check_chatbot_artifacts(text: &str, params: Option<&toml::Table>) -> Vec<
         .and_then(|v| v.as_array())
     {
         for entry in raw_patterns {
-            if let Some(arr) = entry.as_array() {
-                if arr.len() >= 2 {
-                    if let (Some(pat), Some(label)) = (arr[0].as_str(), arr[1].as_str()) {
-                        if let Ok(re) = Regex::new(&format!("(?i){pat}")) {
-                            for m in re.find_iter(text) {
-                                let snippet = snippet_around(text, m.start(), m.end(), 20);
-                                flags.push(SlopFlag::warning(
-                                    "chatbot_artifacts",
-                                    &format!("Chatbot artifact \"{label}\" detected"),
-                                    &format!("...\"{}\"...", snippet),
-                                ));
-                            }
-                        }
-                    }
+            if let Some(arr) = entry.as_array()
+                && arr.len() >= 2
+                && let (Some(pat), Some(label)) = (arr[0].as_str(), arr[1].as_str())
+                && let Ok(re) = Regex::new(&format!("(?i){pat}"))
+            {
+                for m in re.find_iter(text) {
+                    let snippet = snippet_around(text, m.start(), m.end(), 20);
+                    flags.push(SlopFlag::warning(
+                        "chatbot_artifacts",
+                        &format!("Chatbot artifact \"{label}\" detected"),
+                        &format!("...\"{}\"...", snippet),
+                    ));
                 }
             }
         }
@@ -939,20 +927,18 @@ pub fn check_emphasis_crutches(text: &str, params: Option<&toml::Table>) -> Vec<
         .and_then(|v| v.as_array())
     {
         for entry in raw_patterns {
-            if let Some(arr) = entry.as_array() {
-                if arr.len() >= 2 {
-                    if let (Some(pat), Some(label)) = (arr[0].as_str(), arr[1].as_str()) {
-                        if let Ok(re) = Regex::new(&format!("(?i){pat}")) {
-                            for m in re.find_iter(text) {
-                                let snippet = snippet_around(text, m.start(), m.end(), 20);
-                                flags.push(SlopFlag::info(
-                                    "emphasis_crutches",
-                                    &format!("Emphasis crutch \"{label}\" detected"),
-                                    &format!("...\"{}\"...", snippet),
-                                ));
-                            }
-                        }
-                    }
+            if let Some(arr) = entry.as_array()
+                && arr.len() >= 2
+                && let (Some(pat), Some(label)) = (arr[0].as_str(), arr[1].as_str())
+                && let Ok(re) = Regex::new(&format!("(?i){pat}"))
+            {
+                for m in re.find_iter(text) {
+                    let snippet = snippet_around(text, m.start(), m.end(), 20);
+                    flags.push(SlopFlag::info(
+                        "emphasis_crutches",
+                        &format!("Emphasis crutch \"{label}\" detected"),
+                        &format!("...\"{}\"...", snippet),
+                    ));
                 }
             }
         }
@@ -1028,22 +1014,18 @@ pub fn check_vague_attribution(text: &str, params: Option<&toml::Table>) -> Vec<
         .and_then(|v| v.as_array())
     {
         for entry in raw_patterns {
-            if let Some(arr) = entry.as_array() {
-                if arr.len() >= 2 {
-                    if let (Some(pat), Some(label)) = (arr[0].as_str(), arr[1].as_str()) {
-                        if let Ok(re) = Regex::new(&format!("(?i){pat}")) {
-                            for m in re.find_iter(text) {
-                                let snippet = snippet_around(text, m.start(), m.end(), 20);
-                                flags.push(SlopFlag::info(
-                                    "vague_attribution",
-                                    &format!(
-                                        "Vague attribution \"{label}\" — cite a specific source"
-                                    ),
-                                    &format!("...\"{}\"...", snippet),
-                                ));
-                            }
-                        }
-                    }
+            if let Some(arr) = entry.as_array()
+                && arr.len() >= 2
+                && let (Some(pat), Some(label)) = (arr[0].as_str(), arr[1].as_str())
+                && let Ok(re) = Regex::new(&format!("(?i){pat}"))
+            {
+                for m in re.find_iter(text) {
+                    let snippet = snippet_around(text, m.start(), m.end(), 20);
+                    flags.push(SlopFlag::info(
+                        "vague_attribution",
+                        &format!("Vague attribution \"{label}\" — cite a specific source"),
+                        &format!("...\"{}\"...", snippet),
+                    ));
                 }
             }
         }
@@ -1124,22 +1106,19 @@ pub fn check_wordiness(text: &str, params: Option<&toml::Table>) -> Vec<SlopFlag
         .and_then(|v| v.as_array())
     {
         for entry in raw_patterns {
-            if let Some(arr) = entry.as_array() {
-                if arr.len() >= 3 {
-                    if let (Some(pat), Some(label), Some(sug)) =
-                        (arr[0].as_str(), arr[1].as_str(), arr[2].as_str())
-                    {
-                        if let Ok(re) = Regex::new(&format!("(?i){pat}")) {
-                            for m in re.find_iter(text) {
-                                let snippet = snippet_around(text, m.start(), m.end(), 15);
-                                flags.push(SlopFlag::info(
-                                    "wordiness",
-                                    &format!("\"{label}\" — try \"{sug}\""),
-                                    &format!("...\"{}\"...", snippet),
-                                ));
-                            }
-                        }
-                    }
+            if let Some(arr) = entry.as_array()
+                && arr.len() >= 3
+                && let (Some(pat), Some(label), Some(sug)) =
+                    (arr[0].as_str(), arr[1].as_str(), arr[2].as_str())
+                && let Ok(re) = Regex::new(&format!("(?i){pat}"))
+            {
+                for m in re.find_iter(text) {
+                    let snippet = snippet_around(text, m.start(), m.end(), 15);
+                    flags.push(SlopFlag::info(
+                        "wordiness",
+                        &format!("\"{label}\" — try \"{sug}\""),
+                        &format!("...\"{}\"...", snippet),
+                    ));
                 }
             }
         }

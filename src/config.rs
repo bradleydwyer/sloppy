@@ -92,12 +92,12 @@ pub fn load_config(path: Option<&Path>, project_dir: Option<&Path>) -> Config {
 /// Deep-merge two TOML tables. Override wins on conflicts. Lists are replaced.
 fn deep_merge(mut base: toml::Table, over: &toml::Table) -> toml::Table {
     for (key, val) in over {
-        if let Some(base_val) = base.get(key) {
-            if let (toml::Value::Table(base_t), toml::Value::Table(over_t)) = (base_val, val) {
-                let merged = deep_merge(base_t.clone(), over_t);
-                base.insert(key.clone(), toml::Value::Table(merged));
-                continue;
-            }
+        if let Some(base_val) = base.get(key)
+            && let (toml::Value::Table(base_t), toml::Value::Table(over_t)) = (base_val, val)
+        {
+            let merged = deep_merge(base_t.clone(), over_t);
+            base.insert(key.clone(), toml::Value::Table(merged));
+            continue;
         }
         base.insert(key.clone(), val.clone());
     }
