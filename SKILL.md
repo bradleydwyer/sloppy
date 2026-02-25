@@ -13,7 +13,7 @@ user-invocable: true
 argument-hint: "[file to review, or 'voice' to generate prevention prompt]"
 metadata:
   author: bradleydwyer
-  version: "0.5.0"
+  version: "0.5.1"
   status: experimental
 ---
 
