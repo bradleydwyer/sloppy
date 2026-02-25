@@ -156,11 +156,9 @@ pub fn analyze(text: &str, slop_threshold: u32, config: Option<&Config>) -> Slop
         )
     };
 
-    let max_raw: u32 = checks.iter().map(|c| c.max_penalty).sum();
-    let max_raw = if max_raw == 0 { 1 } else { max_raw };
-
     let mut all_flags: Vec<SlopFlag> = Vec::new();
     let mut raw_penalty: u32 = 0;
+    let mut applicable_max: u32 = 0;
     let mut check_scores: BTreeMap<String, CheckScore> = BTreeMap::new();
 
     for check in &checks {
@@ -174,6 +172,8 @@ pub fn analyze(text: &str, slop_threshold: u32, config: Option<&Config>) -> Slop
         raw_penalty += contribution;
 
         if !flags.is_empty() {
+            // Check fired — count its max toward the denominator
+            applicable_max += check.max_penalty;
             check_scores.insert(
                 check.name.to_string(),
                 CheckScore {
@@ -187,6 +187,7 @@ pub fn analyze(text: &str, slop_threshold: u32, config: Option<&Config>) -> Slop
         all_flags.extend(flags);
     }
 
+    let max_raw = if applicable_max == 0 { 1 } else { applicable_max };
     let score = ((raw_penalty as f64 / max_raw as f64) * 100.0).floor() as u32;
     let score = score.min(100);
 
