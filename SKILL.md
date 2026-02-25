@@ -36,7 +36,8 @@ The `slopcheck` CLI must be available on PATH.
 
 **Homebrew (recommended):**
 ```bash
-brew install bradleydwyer/slopcheck/slopcheck
+brew tap bradleydwyer/slopcheck
+brew install slopcheck
 ```
 
 **From source (requires Rust toolchain):**

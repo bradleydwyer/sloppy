@@ -10,7 +10,8 @@ Works standalone as a CLI, or as Layer 1 of a two-layer system with the included
 
 **Homebrew (macOS):**
 ```bash
-brew install bradleydwyer/slopcheck/slopcheck
+brew tap bradleydwyer/slopcheck
+brew install slopcheck
 ```
 
 **From source (requires Rust toolchain):**
