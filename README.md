@@ -4,14 +4,21 @@ Fast regex-based detection of AI prose tells ("slop"). Scores text 0-100.
 
 No LLM calls. No heavy NLP. Single static binary. Runs in <30ms.
 
+Works standalone as a CLI, or as Layer 1 of a two-layer system with the included agent skill (SKILL.md) providing LLM-powered contextual review on top.
+
 ## Install
 
+**Homebrew (macOS):**
+```bash
+brew install bradleydwyer/slopcheck/slopcheck
+```
+
+**From source (requires Rust toolchain):**
 ```bash
 cargo install --path .
 ```
 
-Or build manually:
-
+**Or build manually:**
 ```bash
 cargo build --release
 cp target/release/slopcheck ~/.local/bin/
@@ -78,6 +85,29 @@ Each check contributes a penalty (per flag, capped per check). Raw penalties are
 
 Output includes per-check breakdowns showing which checks contributed most to the score.
 
+## Agent Skill
+
+The included `SKILL.md` turns slopcheck into a two-layer system when used with any AI coding agent that supports skills (Claude Code, Amp, Goose, etc.):
+
+- **Layer 1 (CLI):** Deterministic regex detection. Fast, consistent, handles counting and statistical analysis that LLMs can't do reliably.
+- **Layer 2 (LLM):** Contextual review guided by the skill. Interprets flags in context, catches what regex misses (hedging, equivocation, tonal flatness), judges false positives, and produces rewrites.
+
+Install the CLI first, then add the skill to your agent:
+
+```bash
+# Install the CLI
+brew install bradleydwyer/slopcheck/slopcheck
+
+# Add skill to your agent (example for Claude Code)
+ln -s /path/to/slopcheck ~/.claude/skills/slopcheck
+```
+
+Then ask your agent to review prose, and it will run the CLI, interpret the results, and offer contextual fixes. The `references/` directory contains the full check reference and contextual review guide that the skill loads.
+
+## Voice Directive
+
+The `slopcheck voice` command generates a system prompt directive from the same rules the detector uses, so you can prevent slop at generation time rather than catching it after.
+
 ## Configuration
 
 Create a `.slopcheck.toml` in your project root:
@@ -92,16 +122,6 @@ You can add/remove words, adjust penalty weights, change thresholds, or disable 
 # View resolved config
 slopcheck config --dump
 ```
-
-## Voice Directive
-
-Generate a system prompt directive that prevents slop at generation time:
-
-```bash
-slopcheck voice
-```
-
-This outputs constraints derived from the same rules the detector uses, keeping prevention and detection in sync.
 
 ## JSON Output Schema
 
