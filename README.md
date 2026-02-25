@@ -2,7 +2,9 @@
 
 Catch AI prose tells before your readers do.
 
-Fast, deterministic, regex-based detection of the patterns that make AI-generated text sound like AI-generated text. Scores prose 0-100. No LLM calls, no NLP dependencies, runs in under 100ms.
+Two-layer anti-slop system: a **deterministic detection engine** (regex-based, <100ms, no LLM calls) paired with an **AI agent skill** that interprets the results in context, catches what regex can't, and rewrites flagged passages.
+
+Install as a CLI tool for fast automated checking. Install as a skill for full contextual review and rewriting.
 
 ## What it catches
 
@@ -125,17 +127,25 @@ banned = [
 
 Lists in your config **replace** the defaults (not append). Copy the full list from `defaults.toml` if you want to extend.
 
-## Claude Code skill
+## Agent skill
 
-This repo includes a `/review-prose` slash command for Claude Code. It runs the deterministic detector, then adds LLM-based contextual review on top:
+This repo is an installable skill for AI agents (Claude Code, etc.). The skill adds an LLM layer on top of the deterministic detector:
 
-1. Runs `slop-detector analyze -f json` for reliable pattern matching
+1. Runs `slop-detector analyze -f json` for reliable, consistent pattern matching
 2. Interprets flags in context (is "landscape" literal geography or a metaphor?)
-3. Catches what regex can't — hedging, equivocation, generic abstractions
-4. Suggests specific rewrites for every flagged passage
+3. Catches what regex can't — hedging, equivocation, tonal flatness, generic abstractions
+4. Produces specific rewrites for every flagged passage
 5. Re-runs the detector to verify the score dropped
 
-To use it, clone this repo and the skill is available in any Claude Code session within the project.
+**Why both layers?** The regex engine is fast, deterministic, and catches things LLMs are unreliable at (counting em-dashes, computing sentence-length standard deviations, ensuring zero false negatives on banned words). The LLM layer handles contextual judgment and rewriting that regex can't do. They complement each other.
+
+Install the skill:
+
+```bash
+npx skills add bradleydwyer/slop-detector
+```
+
+See [SKILL.md](SKILL.md) for the full workflow.
 
 ## Development
 
