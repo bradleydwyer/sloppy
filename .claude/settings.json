@@ -1,0 +1,8 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(slop-detector *)",
+      "Bash(python -m pytest *)"
+    ]
+  }
+}

@@ -1,0 +1,97 @@
+[general]
+threshold = 30
+
+[checks.lexical_blacklist]
+enabled = true
+penalty_per_flag = 8
+max_penalty = 40
+severity = "warning"
+
+[checks.lexical_blacklist.words]
+simple = [
+    "delve", "tapestry", "testament", "vibrant", "robust", "crucial",
+    "pivotal", "foster", "cultivate", "nestled", "boasts", "breathtaking",
+    "groundbreaking", "showcasing", "renowned",
+]
+
+[checks.lexical_blacklist.patterns]
+entries = [
+    ['\bunderscore[sd]?\s+the\b', "underscore (verb)"],
+    ['\bhighlight[sd]?\s+(?:the|its|their|our|a|an)\b', "highlight (verb)"],
+    ['\b(?:the|a|an)\s+landscape\s+of\b', "landscape (metaphorical)"],
+    ['\ba rich \w+ of\b', "a rich [noun] of"],
+    ['\bstands as a\b', "stands as a"],
+    ['\bserves as a\b', "serves as a"],
+    ['\bholds the distinction\b', "holds the distinction"],
+    ['\breflects broader\b', "reflects broader"],
+    ['\bshaping the evolving\b', "shaping the evolving"],
+    ['\bmarking a pivotal\b', "marking a pivotal"],
+    ['\bleaving an indelible mark\b', "leaving an indelible mark"],
+]
+
+[checks.em_dash_count]
+enabled = true
+penalty_per_flag = 10
+max_penalty = 10
+severity = "warning"
+max_allowed = 1
+
+[checks.trailing_participle]
+enabled = true
+penalty_per_flag = 10
+max_penalty = 30
+severity = "warning"
+
+[checks.rule_of_three]
+enabled = true
+penalty_per_flag = 5
+max_penalty = 20
+severity = "info"
+
+[checks.transition_openers]
+enabled = true
+penalty_per_flag = 8
+max_penalty = 24
+severity = "warning"
+banned = [
+    "Moreover", "Furthermore", "Additionally", "Consequently",
+    "As a result", "In addition", "On the other hand",
+]
+
+[checks.burstiness]
+enabled = true
+penalty_per_flag = 20
+max_penalty = 20
+severity = "warning"
+std_dev_threshold = 5.0
+min_sentences = 4
+
+[checks.copulative_inflation]
+enabled = true
+penalty_per_flag = 5
+max_penalty = 20
+severity = "info"
+patterns = [
+    ['\bserves as\b', "serves as"],
+    ['\bstand(?:s|ing)?\s+as\b', "stands as"],
+    ['\bfunction(?:s|ing)?\s+as\b', "functions as"],
+    ['\bholds? the distinction of being\b', "holds the distinction of being"],
+    ['\bacts? as\b(?!\s+a\s+deterrent)', "acts as"],
+]
+
+[checks.formulaic_conclusion]
+enabled = true
+penalty_per_flag = 10
+max_penalty = 20
+severity = "warning"
+openers = [
+    "In summary", "In conclusion", "To summarize", "To conclude",
+    "Overall", "Ultimately", "In closing", "Challenges and Future",
+    "Looking ahead", "Moving forward", "In the end",
+]
+
+[checks.patterned_negation]
+enabled = true
+penalty_per_flag = 5
+max_penalty = 15
+severity = "info"
