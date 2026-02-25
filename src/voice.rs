@@ -8,9 +8,8 @@ use crate::config::Config;
 /// Generate a voice authenticity directive from config.
 /// The output is suitable for injection into an LLM system prompt.
 pub fn generate_voice_directive(config: &Config) -> String {
-    let mut sections = vec![
-        "[System-level writing constraints — apply to ALL generated content]".to_string(),
-    ];
+    let mut sections =
+        vec!["[System-level writing constraints — apply to ALL generated content]".to_string()];
 
     // Lexical restrictions
     if let Some(lexical) = config.checks.get("lexical_blacklist") {
@@ -62,7 +61,10 @@ fn build_lexical_section(params: &toml::Table) -> String {
             })
             .collect();
         if !phrase_list.is_empty() {
-            lines.push(format!("Never use these phrases: {}.", phrase_list.join(", ")));
+            lines.push(format!(
+                "Never use these phrases: {}.",
+                phrase_list.join(", ")
+            ));
         }
     }
 
@@ -112,13 +114,8 @@ fn build_punctuation_section(config: &Config) -> String {
 
     if let Some(trans) = config.checks.get("transition_openers") {
         if trans.enabled {
-            if let Some(banned) = trans
-                .params
-                .get("banned")
-                .and_then(|b| b.as_array())
-            {
-                let banned_str: Vec<&str> =
-                    banned.iter().filter_map(|v| v.as_str()).collect();
+            if let Some(banned) = trans.params.get("banned").and_then(|b| b.as_array()) {
+                let banned_str: Vec<&str> = banned.iter().filter_map(|v| v.as_str()).collect();
                 if !banned_str.is_empty() {
                     lines.push(format!(
                         "- Do not start paragraphs with: {}.",
@@ -175,7 +172,8 @@ fn build_structure_section(config: &Config) -> String {
 
 fn build_tone_section(config: &Config) -> String {
     let mut lines = vec!["TONE:".to_string()];
-    lines.push("- Take definitive, committed stances. No balanced-perspective hedging.".to_string());
+    lines
+        .push("- Take definitive, committed stances. No balanced-perspective hedging.".to_string());
     lines.push("- State facts directly without inflating their importance.".to_string());
 
     if let Some(conc) = config.checks.get("formulaic_conclusion") {

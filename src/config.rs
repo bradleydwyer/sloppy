@@ -118,10 +118,7 @@ fn parse_config(raw: &toml::Table) -> Config {
     if let Some(checks_table) = raw.get("checks").and_then(|c| c.as_table()) {
         for (name, check_raw) in checks_table {
             if let Some(ct) = check_raw.as_table() {
-                let enabled = ct
-                    .get("enabled")
-                    .and_then(|v| v.as_bool())
-                    .unwrap_or(true);
+                let enabled = ct.get("enabled").and_then(|v| v.as_bool()).unwrap_or(true);
                 let penalty_per_flag = ct
                     .get("penalty_per_flag")
                     .and_then(|v| v.as_integer())
@@ -213,10 +210,8 @@ mod tests {
 
     #[test]
     fn test_deep_merge_override_scalar() {
-        let base: toml::Table =
-            toml::from_str("[general]\nthreshold = 30").unwrap();
-        let over: toml::Table =
-            toml::from_str("[general]\nthreshold = 20").unwrap();
+        let base: toml::Table = toml::from_str("[general]\nthreshold = 30").unwrap();
+        let over: toml::Table = toml::from_str("[general]\nthreshold = 20").unwrap();
         let result = deep_merge(base, &over);
         assert_eq!(
             result["general"].as_table().unwrap()["threshold"]
@@ -230,18 +225,15 @@ mod tests {
     fn test_deep_merge_preserves_unmentioned_keys() {
         let base: toml::Table =
             toml::from_str("[general]\nthreshold = 30\n\n[other]\nval = \"x\"").unwrap();
-        let over: toml::Table =
-            toml::from_str("[general]\nthreshold = 20").unwrap();
+        let over: toml::Table = toml::from_str("[general]\nthreshold = 20").unwrap();
         let result = deep_merge(base, &over);
         assert!(result.contains_key("other"));
     }
 
     #[test]
     fn test_deep_merge_list_replaced() {
-        let base: toml::Table =
-            toml::from_str("words = [\"a\", \"b\", \"c\"]").unwrap();
-        let over: toml::Table =
-            toml::from_str("words = [\"x\", \"y\"]").unwrap();
+        let base: toml::Table = toml::from_str("words = [\"a\", \"b\", \"c\"]").unwrap();
+        let over: toml::Table = toml::from_str("words = [\"x\", \"y\"]").unwrap();
         let result = deep_merge(base, &over);
         let words = result["words"].as_array().unwrap();
         assert_eq!(words.len(), 2);
@@ -249,8 +241,7 @@ mod tests {
 
     #[test]
     fn test_parse_config_threshold() {
-        let raw: toml::Table =
-            toml::from_str("[general]\nthreshold = 20\n\n[checks]").unwrap();
+        let raw: toml::Table = toml::from_str("[general]\nthreshold = 20\n\n[checks]").unwrap();
         let config = parse_config(&raw);
         assert_eq!(config.threshold, 20);
     }
@@ -283,8 +274,7 @@ simple = ["delve"]
 
     #[test]
     fn test_defaults_for_missing_fields() {
-        let raw: toml::Table =
-            toml::from_str("[checks.custom_check]\nenabled = true").unwrap();
+        let raw: toml::Table = toml::from_str("[checks.custom_check]\nenabled = true").unwrap();
         let config = parse_config(&raw);
         let cc = &config.checks["custom_check"];
         assert_eq!(cc.penalty_per_flag, 10);

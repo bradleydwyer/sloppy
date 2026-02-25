@@ -78,20 +78,12 @@ fn test_file_input() {
     let dir = TempDir::new().unwrap();
     let file = dir.path().join("test.md");
     std::fs::write(&file, "She put the money back.").unwrap();
-    cmd()
-        .arg("analyze")
-        .arg(file)
-        .assert()
-        .success();
+    cmd().arg("analyze").arg(file).assert().success();
 }
 
 #[test]
 fn test_empty_input() {
-    cmd()
-        .arg("analyze")
-        .write_stdin("")
-        .assert()
-        .failure();
+    cmd().arg("analyze").write_stdin("").assert().failure();
 }
 
 // ===========================================================================

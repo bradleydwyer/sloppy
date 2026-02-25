@@ -13,7 +13,11 @@ use slopcheck::detector::analyze;
 use slopcheck::voice::generate_voice_directive;
 
 #[derive(Parser)]
-#[command(name = "slopcheck", version, about = "Fast regex-based detection of AI prose tells.")]
+#[command(
+    name = "slopcheck",
+    version,
+    about = "Fast regex-based detection of AI prose tells."
+)]
 struct Cli {
     #[command(subcommand)]
     command: Commands,
@@ -79,7 +83,9 @@ fn main() {
             quiet,
         } => cmd_analyze(file, threshold, config_path, format, disable, quiet),
 
-        Commands::Voice { config: config_path } => cmd_voice(config_path),
+        Commands::Voice {
+            config: config_path,
+        } => cmd_voice(config_path),
 
         Commands::Config { dump, init } => cmd_config(dump, init),
     }
@@ -104,10 +110,12 @@ fn cmd_analyze(
             eprintln!("Reading from stdin (Ctrl+D to end)...");
         }
         let mut buf = String::new();
-        std::io::stdin().read_to_string(&mut buf).unwrap_or_else(|e| {
-            eprintln!("Error reading stdin: {e}", );
-            process::exit(1);
-        });
+        std::io::stdin()
+            .read_to_string(&mut buf)
+            .unwrap_or_else(|e| {
+                eprintln!("Error reading stdin: {e}",);
+                process::exit(1);
+            });
         buf
     };
 

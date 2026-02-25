@@ -17,15 +17,60 @@ struct CheckDef {
 }
 
 const DEFAULT_CHECKS: &[CheckDef] = &[
-    CheckDef { func: check_lexical_blacklist, name: "lexical_blacklist", penalty_per_flag: 8, max_penalty: 40 },
-    CheckDef { func: check_em_dash_count, name: "em_dash_count", penalty_per_flag: 10, max_penalty: 10 },
-    CheckDef { func: check_trailing_participle, name: "trailing_participle", penalty_per_flag: 10, max_penalty: 30 },
-    CheckDef { func: check_rule_of_three, name: "rule_of_three", penalty_per_flag: 5, max_penalty: 20 },
-    CheckDef { func: check_transition_openers, name: "transition_openers", penalty_per_flag: 8, max_penalty: 24 },
-    CheckDef { func: check_burstiness, name: "burstiness", penalty_per_flag: 20, max_penalty: 20 },
-    CheckDef { func: check_copulative_inflation, name: "copulative_inflation", penalty_per_flag: 5, max_penalty: 20 },
-    CheckDef { func: check_formulaic_conclusion, name: "formulaic_conclusion", penalty_per_flag: 10, max_penalty: 20 },
-    CheckDef { func: check_patterned_negation, name: "patterned_negation", penalty_per_flag: 5, max_penalty: 15 },
+    CheckDef {
+        func: check_lexical_blacklist,
+        name: "lexical_blacklist",
+        penalty_per_flag: 8,
+        max_penalty: 40,
+    },
+    CheckDef {
+        func: check_em_dash_count,
+        name: "em_dash_count",
+        penalty_per_flag: 10,
+        max_penalty: 10,
+    },
+    CheckDef {
+        func: check_trailing_participle,
+        name: "trailing_participle",
+        penalty_per_flag: 10,
+        max_penalty: 30,
+    },
+    CheckDef {
+        func: check_rule_of_three,
+        name: "rule_of_three",
+        penalty_per_flag: 5,
+        max_penalty: 20,
+    },
+    CheckDef {
+        func: check_transition_openers,
+        name: "transition_openers",
+        penalty_per_flag: 8,
+        max_penalty: 24,
+    },
+    CheckDef {
+        func: check_burstiness,
+        name: "burstiness",
+        penalty_per_flag: 20,
+        max_penalty: 20,
+    },
+    CheckDef {
+        func: check_copulative_inflation,
+        name: "copulative_inflation",
+        penalty_per_flag: 5,
+        max_penalty: 20,
+    },
+    CheckDef {
+        func: check_formulaic_conclusion,
+        name: "formulaic_conclusion",
+        penalty_per_flag: 10,
+        max_penalty: 20,
+    },
+    CheckDef {
+        func: check_patterned_negation,
+        name: "patterned_negation",
+        penalty_per_flag: 5,
+        max_penalty: 15,
+    },
 ];
 
 /// Resolved check with penalties (possibly overridden by config).
@@ -85,8 +130,7 @@ pub fn analyze(text: &str, slop_threshold: u32, config: Option<&Config>) -> Slop
             .map(|cc| &cc.params);
 
         let flags = (check.func)(text, params);
-        let contribution =
-            (flags.len() as u32 * check.penalty_per_flag).min(check.max_penalty);
+        let contribution = (flags.len() as u32 * check.penalty_per_flag).min(check.max_penalty);
         raw_penalty += contribution;
         all_flags.extend(flags);
     }
@@ -102,10 +146,8 @@ pub fn analyze(text: &str, slop_threshold: u32, config: Option<&Config>) -> Slop
 }
 
 fn resolve_checks(config: &Config) -> Vec<ResolvedCheck> {
-    let fn_map: std::collections::HashMap<&str, CheckFn> = DEFAULT_CHECKS
-        .iter()
-        .map(|c| (c.name, c.func))
-        .collect();
+    let fn_map: std::collections::HashMap<&str, CheckFn> =
+        DEFAULT_CHECKS.iter().map(|c| (c.name, c.func)).collect();
 
     let mut checks = Vec::new();
     for default in DEFAULT_CHECKS {
@@ -152,7 +194,8 @@ mod tests {
 
     #[test]
     fn test_clean_text_scores_low() {
-        let clean = "She found fourteen dollars in the pocket of a coat she hadn't worn since 2019. \
+        let clean =
+            "She found fourteen dollars in the pocket of a coat she hadn't worn since 2019. \
                       The coat smelled like a restaurant that no longer exists. \
                       She put the money back.";
         let result = analyze(clean, 30, None);
@@ -182,7 +225,8 @@ mod tests {
 
     #[test]
     fn test_custom_threshold_changes_passed() {
-        let text = "This serves as a crucial and robust system. Furthermore, it delves into vibrant \
+        let text =
+            "This serves as a crucial and robust system. Furthermore, it delves into vibrant \
                      new territory, highlighting its groundbreaking potential.";
         let strict = analyze(text, 5, None);
         let lenient = analyze(text, 100, None);

@@ -120,7 +120,6 @@ jobs:
     runs-on: ubuntu-latest
     env:
       TAG: ${{ github.ref_name }}
-      REPO: ${{ github.repository }}
     steps:
       - uses: actions/checkout@v4
 
@@ -128,7 +127,7 @@ jobs:
         id: source
         run: |
           curl -fsSL -o source.tar.gz \
-            "https://github.com/${REPO}/archive/refs/tags/${TAG}.tar.gz"
+            "https://github.com/bradleydwyer/slopcheck/archive/refs/tags/${TAG}.tar.gz"
           SHA=$(sha256sum source.tar.gz | awk '{print $1}')
           echo "sha256=$SHA" >> "$GITHUB_OUTPUT"
 

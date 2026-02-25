@@ -46,35 +46,113 @@ struct WordPattern {
 static DEFAULT_WORD_PATTERNS: LazyLock<Vec<WordPattern>> = LazyLock::new(|| {
     vec![
         // Single words — word-boundary anchored
-        WordPattern { regex: Regex::new(r"(?i)\bdelve\b").unwrap(), label: "delve" },
-        WordPattern { regex: Regex::new(r"(?i)\btapestry\b").unwrap(), label: "tapestry" },
-        WordPattern { regex: Regex::new(r"(?i)\btestament\b").unwrap(), label: "testament" },
-        WordPattern { regex: Regex::new(r"(?i)\bvibrant\b").unwrap(), label: "vibrant" },
-        WordPattern { regex: Regex::new(r"(?i)\brobust\b").unwrap(), label: "robust" },
-        WordPattern { regex: Regex::new(r"(?i)\bcrucial\b").unwrap(), label: "crucial" },
-        WordPattern { regex: Regex::new(r"(?i)\bpivotal\b").unwrap(), label: "pivotal" },
-        WordPattern { regex: Regex::new(r"(?i)\bfoster\b").unwrap(), label: "foster" },
-        WordPattern { regex: Regex::new(r"(?i)\bcultivate\b").unwrap(), label: "cultivate" },
-        WordPattern { regex: Regex::new(r"(?i)\bnestled\b").unwrap(), label: "nestled" },
-        WordPattern { regex: Regex::new(r"(?i)\bboasts\b").unwrap(), label: "boasts" },
-        WordPattern { regex: Regex::new(r"(?i)\bbreathtaking\b").unwrap(), label: "breathtaking" },
-        WordPattern { regex: Regex::new(r"(?i)\bgroundbreaking\b").unwrap(), label: "groundbreaking" },
-        WordPattern { regex: Regex::new(r"(?i)\bshowcasing\b").unwrap(), label: "showcasing" },
-        WordPattern { regex: Regex::new(r"(?i)\brenowned\b").unwrap(), label: "renowned" },
+        WordPattern {
+            regex: Regex::new(r"(?i)\bdelve\b").unwrap(),
+            label: "delve",
+        },
+        WordPattern {
+            regex: Regex::new(r"(?i)\btapestry\b").unwrap(),
+            label: "tapestry",
+        },
+        WordPattern {
+            regex: Regex::new(r"(?i)\btestament\b").unwrap(),
+            label: "testament",
+        },
+        WordPattern {
+            regex: Regex::new(r"(?i)\bvibrant\b").unwrap(),
+            label: "vibrant",
+        },
+        WordPattern {
+            regex: Regex::new(r"(?i)\brobust\b").unwrap(),
+            label: "robust",
+        },
+        WordPattern {
+            regex: Regex::new(r"(?i)\bcrucial\b").unwrap(),
+            label: "crucial",
+        },
+        WordPattern {
+            regex: Regex::new(r"(?i)\bpivotal\b").unwrap(),
+            label: "pivotal",
+        },
+        WordPattern {
+            regex: Regex::new(r"(?i)\bfoster\b").unwrap(),
+            label: "foster",
+        },
+        WordPattern {
+            regex: Regex::new(r"(?i)\bcultivate\b").unwrap(),
+            label: "cultivate",
+        },
+        WordPattern {
+            regex: Regex::new(r"(?i)\bnestled\b").unwrap(),
+            label: "nestled",
+        },
+        WordPattern {
+            regex: Regex::new(r"(?i)\bboasts\b").unwrap(),
+            label: "boasts",
+        },
+        WordPattern {
+            regex: Regex::new(r"(?i)\bbreathtaking\b").unwrap(),
+            label: "breathtaking",
+        },
+        WordPattern {
+            regex: Regex::new(r"(?i)\bgroundbreaking\b").unwrap(),
+            label: "groundbreaking",
+        },
+        WordPattern {
+            regex: Regex::new(r"(?i)\bshowcasing\b").unwrap(),
+            label: "showcasing",
+        },
+        WordPattern {
+            regex: Regex::new(r"(?i)\brenowned\b").unwrap(),
+            label: "renowned",
+        },
         // Verb uses
-        WordPattern { regex: Regex::new(r"(?i)\bunderscore[sd]?\s+the\b").unwrap(), label: "underscore (verb)" },
-        WordPattern { regex: Regex::new(r"(?i)\bhighlight[sd]?\s+(?:the|its|their|our|a|an)\b").unwrap(), label: "highlight (verb)" },
+        WordPattern {
+            regex: Regex::new(r"(?i)\bunderscore[sd]?\s+the\b").unwrap(),
+            label: "underscore (verb)",
+        },
+        WordPattern {
+            regex: Regex::new(r"(?i)\bhighlight[sd]?\s+(?:the|its|their|our|a|an)\b").unwrap(),
+            label: "highlight (verb)",
+        },
         // Metaphorical landscape
-        WordPattern { regex: Regex::new(r"(?i)\b(?:the|a|an)\s+landscape\s+of\b").unwrap(), label: "landscape (metaphorical)" },
+        WordPattern {
+            regex: Regex::new(r"(?i)\b(?:the|a|an)\s+landscape\s+of\b").unwrap(),
+            label: "landscape (metaphorical)",
+        },
         // Multi-word phrases
-        WordPattern { regex: Regex::new(r"(?i)\ba rich \w+ of\b").unwrap(), label: "a rich [noun] of" },
-        WordPattern { regex: Regex::new(r"(?i)\bstands as a\b").unwrap(), label: "stands as a" },
-        WordPattern { regex: Regex::new(r"(?i)\bserves as a\b").unwrap(), label: "serves as a" },
-        WordPattern { regex: Regex::new(r"(?i)\bholds the distinction\b").unwrap(), label: "holds the distinction" },
-        WordPattern { regex: Regex::new(r"(?i)\breflects broader\b").unwrap(), label: "reflects broader" },
-        WordPattern { regex: Regex::new(r"(?i)\bshaping the evolving\b").unwrap(), label: "shaping the evolving" },
-        WordPattern { regex: Regex::new(r"(?i)\bmarking a pivotal\b").unwrap(), label: "marking a pivotal" },
-        WordPattern { regex: Regex::new(r"(?i)\bleaving an indelible mark\b").unwrap(), label: "leaving an indelible mark" },
+        WordPattern {
+            regex: Regex::new(r"(?i)\ba rich \w+ of\b").unwrap(),
+            label: "a rich [noun] of",
+        },
+        WordPattern {
+            regex: Regex::new(r"(?i)\bstands as a\b").unwrap(),
+            label: "stands as a",
+        },
+        WordPattern {
+            regex: Regex::new(r"(?i)\bserves as a\b").unwrap(),
+            label: "serves as a",
+        },
+        WordPattern {
+            regex: Regex::new(r"(?i)\bholds the distinction\b").unwrap(),
+            label: "holds the distinction",
+        },
+        WordPattern {
+            regex: Regex::new(r"(?i)\breflects broader\b").unwrap(),
+            label: "reflects broader",
+        },
+        WordPattern {
+            regex: Regex::new(r"(?i)\bshaping the evolving\b").unwrap(),
+            label: "shaping the evolving",
+        },
+        WordPattern {
+            regex: Regex::new(r"(?i)\bmarking a pivotal\b").unwrap(),
+            label: "marking a pivotal",
+        },
+        WordPattern {
+            regex: Regex::new(r"(?i)\bleaving an indelible mark\b").unwrap(),
+            label: "leaving an indelible mark",
+        },
     ]
 });
 
@@ -186,9 +264,7 @@ pub fn check_em_dash_count(text: &str, params: Option<&toml::Table>) -> Vec<Slop
 
     vec![SlopFlag::warning(
         "em_dash_count",
-        &format!(
-            "Text contains {em_dashes} em-dashes (max {max_allowed} allowed)"
-        ),
+        &format!("Text contains {em_dashes} em-dashes (max {max_allowed} allowed)"),
         "",
     )]
 }
@@ -265,22 +341,34 @@ pub fn check_transition_openers(text: &str, params: Option<&toml::Table>) -> Vec
                     .filter_map(|v| v.as_str().map(|s| s.to_string()))
                     .collect()
             })
-            .unwrap_or_else(|| DEFAULT_TRANSITION_OPENERS.iter().map(|s| s.to_string()).collect())
+            .unwrap_or_else(|| {
+                DEFAULT_TRANSITION_OPENERS
+                    .iter()
+                    .map(|s| s.to_string())
+                    .collect()
+            })
     } else {
-        DEFAULT_TRANSITION_OPENERS.iter().map(|s| s.to_string()).collect()
+        DEFAULT_TRANSITION_OPENERS
+            .iter()
+            .map(|s| s.to_string())
+            .collect()
     };
 
     let escaped: Vec<String> = banned.iter().map(|b| regex::escape(b)).collect();
-    let pattern = format!(
-        r"(?i)(?:^|\n\n)[ \t]*({})\b",
-        escaped.join("|")
-    );
+    let pattern = format!(r"(?i)(?:^|\n\n)[ \t]*({})\b", escaped.join("|"));
     let re = Regex::new(&pattern).unwrap();
 
     let mut flags = Vec::new();
     for caps in re.captures_iter(text) {
         let matched = caps.get(1).unwrap().as_str();
-        let full: String = caps.get(0).unwrap().as_str().trim().chars().take(60).collect();
+        let full: String = caps
+            .get(0)
+            .unwrap()
+            .as_str()
+            .trim()
+            .chars()
+            .take(60)
+            .collect();
         flags.push(SlopFlag::warning(
             "transition_opener",
             &format!("Paragraph opens with banned transition \"{matched}\""),
@@ -341,18 +429,36 @@ struct CopulativePattern {
 
 static DEFAULT_COPULATIVE_PATTERNS: LazyLock<Vec<CopulativePattern>> = LazyLock::new(|| {
     vec![
-        CopulativePattern { regex: Regex::new(r"(?i)\bserves as\b").unwrap(), label: "serves as" },
-        CopulativePattern { regex: Regex::new(r"(?i)\bstand(?:s|ing)?\s+as\b").unwrap(), label: "stands as" },
-        CopulativePattern { regex: Regex::new(r"(?i)\bfunction(?:s|ing)?\s+as\b").unwrap(), label: "functions as" },
-        CopulativePattern { regex: Regex::new(r"(?i)\bholds? the distinction of being\b").unwrap(), label: "holds the distinction of being" },
-        CopulativePattern { regex: Regex::new(r"(?i)\bacts? as\b").unwrap(), label: "acts as" },
+        CopulativePattern {
+            regex: Regex::new(r"(?i)\bserves as\b").unwrap(),
+            label: "serves as",
+        },
+        CopulativePattern {
+            regex: Regex::new(r"(?i)\bstand(?:s|ing)?\s+as\b").unwrap(),
+            label: "stands as",
+        },
+        CopulativePattern {
+            regex: Regex::new(r"(?i)\bfunction(?:s|ing)?\s+as\b").unwrap(),
+            label: "functions as",
+        },
+        CopulativePattern {
+            regex: Regex::new(r"(?i)\bholds? the distinction of being\b").unwrap(),
+            label: "holds the distinction of being",
+        },
+        CopulativePattern {
+            regex: Regex::new(r"(?i)\bacts? as\b").unwrap(),
+            label: "acts as",
+        },
     ]
 });
 
 pub fn check_copulative_inflation(text: &str, params: Option<&toml::Table>) -> Vec<SlopFlag> {
     let mut flags = Vec::new();
 
-    if let Some(raw_patterns) = params.and_then(|p| p.get("patterns")).and_then(|v| v.as_array()) {
+    if let Some(raw_patterns) = params
+        .and_then(|p| p.get("patterns"))
+        .and_then(|v| v.as_array())
+    {
         for entry in raw_patterns {
             if let Some(arr) = entry.as_array() {
                 if arr.len() >= 2 {
@@ -362,7 +468,9 @@ pub fn check_copulative_inflation(text: &str, params: Option<&toml::Table>) -> V
                                 let snippet = snippet_around(text, m.start(), m.end(), 15);
                                 flags.push(SlopFlag::info(
                                     "copulative_inflation",
-                                    &format!("Copulative inflation \"{label}\" — prefer \"is/are\""),
+                                    &format!(
+                                        "Copulative inflation \"{label}\" — prefer \"is/are\""
+                                    ),
                                     &format!("...\"{}\"...", snippet),
                                 ));
                             }
@@ -421,22 +529,34 @@ pub fn check_formulaic_conclusion(text: &str, params: Option<&toml::Table>) -> V
                     .filter_map(|v| v.as_str().map(|s| s.to_string()))
                     .collect()
             })
-            .unwrap_or_else(|| DEFAULT_CONCLUSION_OPENERS.iter().map(|s| s.to_string()).collect())
+            .unwrap_or_else(|| {
+                DEFAULT_CONCLUSION_OPENERS
+                    .iter()
+                    .map(|s| s.to_string())
+                    .collect()
+            })
     } else {
-        DEFAULT_CONCLUSION_OPENERS.iter().map(|s| s.to_string()).collect()
+        DEFAULT_CONCLUSION_OPENERS
+            .iter()
+            .map(|s| s.to_string())
+            .collect()
     };
 
     let escaped: Vec<String> = openers.iter().map(|o| regex::escape(o)).collect();
-    let pattern = format!(
-        r"(?i)(?:^|\n+)\s*({})\b",
-        escaped.join("|")
-    );
+    let pattern = format!(r"(?i)(?:^|\n+)\s*({})\b", escaped.join("|"));
     let re = Regex::new(&pattern).unwrap();
 
     let mut flags = Vec::new();
     for caps in re.captures_iter(text) {
         let matched = caps.get(1).unwrap().as_str();
-        let full: String = caps.get(0).unwrap().as_str().trim().chars().take(60).collect();
+        let full: String = caps
+            .get(0)
+            .unwrap()
+            .as_str()
+            .trim()
+            .chars()
+            .take(60)
+            .collect();
         flags.push(SlopFlag::warning(
             "formulaic_conclusion",
             &format!("Formulaic conclusion opener \"{matched}\""),
@@ -475,15 +595,22 @@ static DEFAULT_NEGATION_PATTERNS: LazyLock<Vec<NegationPattern>> = LazyLock::new
 pub fn check_patterned_negation(text: &str, params: Option<&toml::Table>) -> Vec<SlopFlag> {
     let mut flags = Vec::new();
 
-    if let Some(raw_patterns) = params.and_then(|p| p.get("patterns")).and_then(|v| v.as_array()) {
+    if let Some(raw_patterns) = params
+        .and_then(|p| p.get("patterns"))
+        .and_then(|v| v.as_array())
+    {
         for entry in raw_patterns {
             if let Some(arr) = entry.as_array() {
                 if arr.len() >= 2 {
                     if let (Some(pat), Some(label)) = (arr[0].as_str(), arr[1].as_str()) {
                         if let Ok(re) = Regex::new(&format!("(?i){pat}")) {
                             for m in re.find_iter(text) {
-                                let snippet: String =
-                                    m.as_str().chars().take(80).collect::<String>().replace('\n', " ");
+                                let snippet: String = m
+                                    .as_str()
+                                    .chars()
+                                    .take(80)
+                                    .collect::<String>()
+                                    .replace('\n', " ");
                                 flags.push(SlopFlag::info(
                                     "patterned_negation",
                                     &format!("Patterned negation \"{label}\" detected"),
@@ -498,8 +625,12 @@ pub fn check_patterned_negation(text: &str, params: Option<&toml::Table>) -> Vec
     } else {
         for np in DEFAULT_NEGATION_PATTERNS.iter() {
             for m in np.regex.find_iter(text) {
-                let snippet: String =
-                    m.as_str().chars().take(80).collect::<String>().replace('\n', " ");
+                let snippet: String = m
+                    .as_str()
+                    .chars()
+                    .take(80)
+                    .collect::<String>()
+                    .replace('\n', " ");
                 flags.push(SlopFlag::info(
                     "patterned_negation",
                     &format!("Patterned negation \"{}\" detected", np.label),
@@ -536,7 +667,8 @@ mod tests {
 
     #[test]
     fn test_detects_testament() {
-        let flags = check_lexical_blacklist("This building is a testament to human ambition.", None);
+        let flags =
+            check_lexical_blacklist("This building is a testament to human ambition.", None);
         assert!(flags.iter().any(|f| f.description.contains("testament")));
     }
 
@@ -602,7 +734,8 @@ mod tests {
 
     #[test]
     fn test_detects_showcasing() {
-        let flags = check_lexical_blacklist("The exhibition showcasing local talent opens Friday.", None);
+        let flags =
+            check_lexical_blacklist("The exhibition showcasing local talent opens Friday.", None);
         assert!(!flags.is_empty());
     }
 
@@ -621,7 +754,9 @@ mod tests {
     #[test]
     fn test_underscore_not_flagged_as_noun() {
         let flags = check_lexical_blacklist("The variable name uses an underscore.", None);
-        assert!(!flags.iter().any(|f| f.description.contains("underscore (verb)")));
+        assert!(!flags
+            .iter()
+            .any(|f| f.description.contains("underscore (verb)")));
     }
 
     #[test]
@@ -633,7 +768,9 @@ mod tests {
     #[test]
     fn test_highlight_noun_not_flagged() {
         let flags = check_lexical_blacklist("The highlight of the evening was the speech.", None);
-        assert!(!flags.iter().any(|f| f.description.contains("highlight (verb)")));
+        assert!(!flags
+            .iter()
+            .any(|f| f.description.contains("highlight (verb)")));
     }
 
     #[test]
@@ -645,7 +782,9 @@ mod tests {
     #[test]
     fn test_literal_landscape_not_flagged() {
         let flags = check_lexical_blacklist("The landscape was covered in snow.", None);
-        assert!(!flags.iter().any(|f| f.description.contains("landscape (metaphorical)")));
+        assert!(!flags
+            .iter()
+            .any(|f| f.description.contains("landscape (metaphorical)")));
     }
 
     #[test]
@@ -669,31 +808,48 @@ mod tests {
     #[test]
     fn test_detects_holds_the_distinction() {
         let flags = check_lexical_blacklist("She holds the distinction of being the first.", None);
-        assert!(flags.iter().any(|f| f.description.contains("holds the distinction")));
+        assert!(flags
+            .iter()
+            .any(|f| f.description.contains("holds the distinction")));
     }
 
     #[test]
     fn test_detects_reflects_broader() {
         let flags = check_lexical_blacklist("This reflects broader trends in society.", None);
-        assert!(flags.iter().any(|f| f.description.contains("reflects broader")));
+        assert!(flags
+            .iter()
+            .any(|f| f.description.contains("reflects broader")));
     }
 
     #[test]
     fn test_detects_shaping_the_evolving() {
-        let flags = check_lexical_blacklist("These forces are shaping the evolving landscape.", None);
-        assert!(flags.iter().any(|f| f.description.contains("shaping the evolving")));
+        let flags =
+            check_lexical_blacklist("These forces are shaping the evolving landscape.", None);
+        assert!(flags
+            .iter()
+            .any(|f| f.description.contains("shaping the evolving")));
     }
 
     #[test]
     fn test_detects_marking_a_pivotal() {
-        let flags = check_lexical_blacklist("This decision, marking a pivotal shift, changed everything.", None);
-        assert!(flags.iter().any(|f| f.description.contains("marking a pivotal")));
+        let flags = check_lexical_blacklist(
+            "This decision, marking a pivotal shift, changed everything.",
+            None,
+        );
+        assert!(flags
+            .iter()
+            .any(|f| f.description.contains("marking a pivotal")));
     }
 
     #[test]
     fn test_detects_leaving_indelible_mark() {
-        let flags = check_lexical_blacklist("He retired, leaving an indelible mark on the institution.", None);
-        assert!(flags.iter().any(|f| f.description.contains("leaving an indelible mark")));
+        let flags = check_lexical_blacklist(
+            "He retired, leaving an indelible mark on the institution.",
+            None,
+        );
+        assert!(flags
+            .iter()
+            .any(|f| f.description.contains("leaving an indelible mark")));
     }
 
     #[test]
@@ -708,7 +864,8 @@ mod tests {
 
     #[test]
     fn test_multiple_hits() {
-        let text = "Vibrant and robust, the initiative serves as a testament to groundbreaking work.";
+        let text =
+            "Vibrant and robust, the initiative serves as a testament to groundbreaking work.";
         let flags = check_lexical_blacklist(text, None);
         assert!(flags.len() >= 4);
     }
@@ -716,8 +873,12 @@ mod tests {
     #[test]
     fn test_case_insensitive() {
         let flags = check_lexical_blacklist("DELVE into the data. VIBRANT colours.", None);
-        assert!(flags.iter().any(|f| f.description.to_lowercase().contains("delve")));
-        assert!(flags.iter().any(|f| f.description.to_lowercase().contains("vibrant")));
+        assert!(flags
+            .iter()
+            .any(|f| f.description.to_lowercase().contains("delve")));
+        assert!(flags
+            .iter()
+            .any(|f| f.description.to_lowercase().contains("vibrant")));
     }
 
     // --- Em-dash count ---
@@ -855,10 +1016,8 @@ mod tests {
 
     #[test]
     fn test_opener_mid_sentence_not_flagged() {
-        let flags = check_transition_openers(
-            "He said that, moreover, the cost was prohibitive.",
-            None,
-        );
+        let flags =
+            check_transition_openers("He said that, moreover, the cost was prohibitive.", None);
         assert!(flags.is_empty());
     }
 
@@ -891,7 +1050,10 @@ mod tests {
                      The fish swam under the old bridge. \
                      The fox hid behind the old tree.";
         let flags = check_burstiness(text, None);
-        assert!(!flags.is_empty(), "Expected burstiness flag for uniform sentences");
+        assert!(
+            !flags.is_empty(),
+            "Expected burstiness flag for uniform sentences"
+        );
     }
 
     #[test]
@@ -1023,10 +1185,7 @@ mod tests {
 
     #[test]
     fn test_detects_this_isnt_about() {
-        let flags = check_patterned_negation(
-            "This isn't about money. It's about principle.",
-            None,
-        );
+        let flags = check_patterned_negation("This isn't about money. It's about principle.", None);
         assert!(!flags.is_empty());
     }
 
