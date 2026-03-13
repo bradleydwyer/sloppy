@@ -96,17 +96,20 @@ The included `SKILL.md` turns slopcheck into a two-layer system when used with a
 - **Layer 1 (CLI):** Deterministic regex detection. Fast, consistent, handles counting and statistical analysis that LLMs can't do reliably.
 - **Layer 2 (LLM):** Contextual review guided by the skill. Interprets flags in context, catches what regex misses (hedging, equivocation, tonal flatness), judges false positives, and produces rewrites.
 
-Install the CLI first, then add the skill to your agent:
+Install the CLI, then install the skill:
 
 ```bash
 # Install the CLI
 brew install bradleydwyer/slopcheck/slopcheck
 
-# Add skill to your agent (example for Claude Code)
-ln -s /path/to/slopcheck ~/.claude/skills/slopcheck
+# Install the agent skill (writes SKILL.md + references to ~/.claude/skills/slopcheck/)
+slopcheck skill install
+
+# To uninstall the skill later
+slopcheck skill uninstall
 ```
 
-Then ask your agent to review prose, and it will run the CLI, interpret the results, and offer contextual fixes. The `references/` directory contains the full check reference and contextual review guide that the skill loads.
+The `skill install` command embeds all skill files (SKILL.md, check reference, contextual review guide) into the binary — no need to clone the repo. Then ask your agent to review prose, and it will run the CLI, interpret the results, and offer contextual fixes.
 
 ## Voice Directive
 

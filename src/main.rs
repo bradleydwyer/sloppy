@@ -5,7 +5,7 @@ use std::io::{IsTerminal, Read};
 use std::path::PathBuf;
 use std::process;
 
-use clap::{Parser, Subcommand};
+use clap::{Parser, Subcommand, ValueEnum};
 use serde_json::json;
 
 use slopcheck::config::{dump_config, load_config};
@@ -72,6 +72,24 @@ enum Commands {
         #[arg(long)]
         init: bool,
     },
+
+    /// Install or uninstall the agent skill for AI coding agents (Claude Code, etc.).
+    Skill {
+        /// Action to perform.
+        action: SkillAction,
+
+        /// Target agent. Currently only "claude-code" is supported.
+        #[arg(short, long, value_parser = ["claude-code"], default_value = "claude-code")]
+        agent: String,
+    },
+}
+
+#[derive(Clone, ValueEnum)]
+enum SkillAction {
+    /// Install the skill files to the agent's skills directory.
+    Install,
+    /// Remove the skill files from the agent's skills directory.
+    Uninstall,
 }
 
 fn main() {
@@ -93,6 +111,8 @@ fn main() {
         } => cmd_voice(config_path),
 
         Commands::Config { dump, init } => cmd_config(dump, init),
+
+        Commands::Skill { action, agent } => cmd_skill(action, &agent),
     }
 }
 
@@ -306,4 +326,71 @@ fn cmd_config(dump: bool, init: bool) {
     }
 
     println!("Use --dump to show config or --init to create a template.");
+}
+
+const SKILL_MD: &str = include_str!("../SKILL.md");
+const CHECKS_MD: &str = include_str!("../references/checks.md");
+const CONTEXTUAL_REVIEW_MD: &str = include_str!("../references/contextual-review.md");
+
+fn skill_dir(agent: &str) -> PathBuf {
+    let home = std::env::var("HOME").unwrap_or_else(|_| {
+        eprintln!("Could not determine home directory.");
+        process::exit(2);
+    });
+    match agent {
+        "claude-code" => PathBuf::from(home).join(".claude").join("skills").join("slopcheck"),
+        _ => {
+            eprintln!("Unsupported agent: {agent}");
+            process::exit(2);
+        }
+    }
+}
+
+fn cmd_skill(action: SkillAction, agent: &str) {
+    let dir = skill_dir(agent);
+
+    match action {
+        SkillAction::Install => {
+            let refs_dir = dir.join("references");
+
+            // Create directories
+            std::fs::create_dir_all(&refs_dir).unwrap_or_else(|e| {
+                eprintln!("Error creating {}: {e}", refs_dir.display());
+                process::exit(2);
+            });
+
+            // Write files
+            let skill_md = dir.join("SKILL.md");
+            let checks_md = refs_dir.join("checks.md");
+            let contextual_md = refs_dir.join("contextual-review.md");
+
+            for (path, content) in [
+                (skill_md.as_path(), SKILL_MD),
+                (checks_md.as_path(), CHECKS_MD),
+                (contextual_md.as_path(), CONTEXTUAL_REVIEW_MD),
+            ] {
+                std::fs::write(path, content).unwrap_or_else(|e| {
+                    eprintln!("Error writing {}: {e}", path.display());
+                    process::exit(2);
+                });
+            }
+
+            println!("Installed slopcheck skill to {}", dir.display());
+            println!();
+            println!("The skill is now available. Restart your agent or start a new conversation to use it.");
+        }
+        SkillAction::Uninstall => {
+            if !dir.exists() {
+                println!("Nothing to uninstall — {} does not exist.", dir.display());
+                return;
+            }
+
+            std::fs::remove_dir_all(&dir).unwrap_or_else(|e| {
+                eprintln!("Error removing {}: {e}", dir.display());
+                process::exit(2);
+            });
+
+            println!("Uninstalled slopcheck skill from {}", dir.display());
+        }
+    }
 }

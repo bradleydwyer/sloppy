@@ -42,8 +42,15 @@ brew install slopcheck
 
 **From source (requires Rust toolchain):**
 ```bash
-cargo install --git https://github.com/bradleydwyer/slopcheck --tag v0.5.2
+cargo install --git https://github.com/bradleydwyer/slopcheck
 ```
+
+**Install the agent skill:**
+```bash
+slopcheck skill install
+```
+
+This writes the skill files to `~/.claude/skills/slopcheck/`. No need to clone the repo.
 
 **Verify installation:**
 ```bash
@@ -220,6 +227,12 @@ slopcheck config --init
 
 # Dump resolved config
 slopcheck config --dump
+
+# Install agent skill (Claude Code)
+slopcheck skill install
+
+# Uninstall agent skill
+slopcheck skill uninstall
 ```
 
 ---
