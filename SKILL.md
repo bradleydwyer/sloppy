@@ -1,8 +1,8 @@
 ---
-name: slopcheck
-description: "Detect and fix AI prose tells (slop) in text. Two-layer system: fast regex-based detection via the slopcheck CLI, plus LLM contextual review and rewriting. Use when reviewing, editing, checking, or cleaning up prose that needs to read as human-written. Also use when generating content that should avoid AI patterns, or building a quality gate for AI-generated text."
+name: sloppy
+description: "Detect and fix AI prose tells (slop) in text. Two-layer system: fast regex-based detection via the sloppy CLI, plus LLM contextual review and rewriting. Use when reviewing, editing, checking, or cleaning up prose that needs to read as human-written. Also use when generating content that should avoid AI patterns, or building a quality gate for AI-generated text."
 allowed-tools:
-  - Bash(slopcheck:*)
+  - Bash(sloppy:*)
   - Bash(cat:*)
   - Bash(mktemp:*)
   - Read
@@ -17,9 +17,9 @@ metadata:
   status: experimental
 ---
 
-# Slopcheck — AI Prose Detection & Repair
+# Sloppy — AI Prose Detection & Repair
 
-Two-layer anti-slop system. Layer 1 is deterministic regex detection via the `slopcheck` CLI — fast (<30ms), consistent, handles counting and statistical analysis that LLMs can't do reliably. Layer 2 is LLM contextual review — interprets flags in context, catches what regex misses, produces rewrites.
+Two-layer anti-slop system. Layer 1 is deterministic regex detection via the `sloppy` CLI — fast (<30ms), consistent, handles counting and statistical analysis that LLMs can't do reliably. Layer 2 is LLM contextual review — interprets flags in context, catches what regex misses, produces rewrites.
 
 ## When to Use This Skill
 
@@ -32,22 +32,22 @@ Two-layer anti-slop system. Layer 1 is deterministic regex detection via the `sl
 
 ## Installation
 
-The `slopcheck` CLI must be available on PATH.
+The `sloppy` CLI must be available on PATH.
 
 **Homebrew (recommended):**
 ```bash
-brew tap bradleydwyer/slopcheck
-brew install slopcheck
+brew tap bradleydwyer/sloppy
+brew install sloppy
 ```
 
 **From source (requires Rust toolchain):**
 ```bash
-cargo install --git https://github.com/bradleydwyer/slopcheck --tag v0.5.2
+cargo install --git https://github.com/bradleydwyer/sloppy --tag v0.5.2
 ```
 
 **Verify installation:**
 ```bash
-slopcheck analyze -q <<< "test"
+sloppy analyze -q <<< "test"
 ```
 
 If the command is not found, install it before proceeding.
@@ -73,14 +73,14 @@ If the user provides a file path, analyze it directly. If they paste text, write
 
 ```bash
 # File path (|| true prevents non-zero exit code on FAIL — read pass/fail from JSON)
-slopcheck analyze -f json path/to/file.md || true
+sloppy analyze -f json path/to/file.md || true
 
 # From pasted text
-TMPFILE=$(mktemp /tmp/slopcheck_XXXXXXXX)
+TMPFILE=$(mktemp /tmp/sloppy_XXXXXXXX)
 cat > "$TMPFILE" << 'SLOP_EOF'
 [pasted text here]
 SLOP_EOF
-slopcheck analyze -f json "$TMPFILE" || true
+sloppy analyze -f json "$TMPFILE" || true
 ```
 
 Parse the JSON output:
@@ -148,7 +148,7 @@ Rewrite the full text addressing all true-positive flags and contextual issues:
 Run the detector again on the revised text:
 
 ```bash
-slopcheck analyze -f json /tmp/slop_review_revised.md || true
+sloppy analyze -f json /tmp/slop_review_revised.md || true
 ```
 
 Report the new score. If it still fails the threshold, iterate on remaining flags. Maximum 3 rewrite iterations before presenting the best version and noting remaining issues.
@@ -160,25 +160,25 @@ Report the new score. If it still fails the threshold, iterate on remaining flag
 When the user wants to prevent slop at generation time rather than catch it after:
 
 ```bash
-slopcheck voice
+sloppy voice
 ```
 
 This outputs a constraint block derived from the same rules the detector uses. Inject it into any LLM system prompt where output needs to read as human-written. Prevention and detection stay in sync because they share the same config.
 
-If the user has a custom `.slopcheck.toml`, the voice directive reflects their custom word lists and settings.
+If the user has a custom `.sloppy.toml`, the voice directive reflects their custom word lists and settings.
 
 ---
 
 ## Configuration
 
-The detector is configurable via `.slopcheck.toml` in the project root.
+The detector is configurable via `.sloppy.toml` in the project root.
 
 ```bash
 # Create a template config
-slopcheck config --init
+sloppy config --init
 
 # View the fully resolved config (defaults + overrides)
-slopcheck config --dump
+sloppy config --dump
 ```
 
 Users can: add/remove banned words, adjust penalty weights per check, change the pass/fail threshold, or disable checks entirely. All config is optional — everything works with zero configuration.
@@ -189,37 +189,37 @@ Users can: add/remove banned words, adjust penalty weights per check, change the
 
 ```bash
 # Analyze a file (human-readable output)
-slopcheck analyze file.md
+sloppy analyze file.md
 
 # Analyze with JSON output (for programmatic use)
-slopcheck analyze -f json file.md
+sloppy analyze -f json file.md
 
 # Analyze from stdin
-echo "text" | slopcheck analyze
+echo "text" | sloppy analyze
 
 # Quiet mode — score and pass/fail only
-slopcheck analyze -q file.md
+sloppy analyze -q file.md
 
 # Custom threshold
-slopcheck analyze -t 20 file.md
+sloppy analyze -t 20 file.md
 
 # Disable specific checks
-slopcheck analyze --disable burstiness --disable rule_of_three file.md
+sloppy analyze --disable burstiness --disable rule_of_three file.md
 
 # Run only one check
-slopcheck analyze --only lexical_blacklist file.md
+sloppy analyze --only lexical_blacklist file.md
 
 # Analyze multiple files
-slopcheck analyze *.md
+sloppy analyze *.md
 
 # Generate voice directive
-slopcheck voice
+sloppy voice
 
 # Initialize config
-slopcheck config --init
+sloppy config --init
 
 # Dump resolved config
-slopcheck config --dump
+sloppy config --dump
 ```
 
 ---
@@ -230,5 +230,5 @@ slopcheck config --dump
 - **Don't chase score 0.** Some flagged patterns are legitimate in context. Judge false positives.
 - **Use `--disable` for domain-specific exceptions.** Technical docs might legitimately use "robust" — disable `lexical_blacklist` or customize the word list.
 - **The voice directive is the highest-leverage output.** One injection into a system prompt prevents hundreds of downstream fixes.
-- **JSON output + jq** makes slopcheck composable in pipelines: `slopcheck analyze -f json file.md | jq '.flags[] | .check_name'`
+- **JSON output + jq** makes sloppy composable in pipelines: `sloppy analyze -f json file.md | jq '.flags[] | .check_name'`
 - **Run on your own prompts and system messages too.** AI slop in prompts begets AI slop in outputs.

@@ -55,10 +55,10 @@ jobs:
         env:
           SOURCE_SHA: ${{ steps.source.outputs.sha256 }}
         run: |
-          TAPDIR="$(brew --repository)/Library/Taps/local/homebrew-slopcheck/Formula"
+          TAPDIR="$(brew --repository)/Library/Taps/local/homebrew-sloppy/Formula"
           mkdir -p "$TAPDIR"
-          cat > "$TAPDIR/slopcheck.rb" <<FORMULA
-          class Slopcheck < Formula
+          cat > "$TAPDIR/sloppy.rb" <<FORMULA
+          class Sloppy < Formula
             desc "Fast regex-based detection of AI prose tells"
             homepage "https://github.com/${REPO}"
             url "https://github.com/${REPO}/archive/refs/tags/${TAG}.tar.gz"
@@ -72,13 +72,13 @@ jobs:
             end
 
             test do
-              assert_match "slopcheck", shell_output("#{bin}/slopcheck --version")
+              assert_match "sloppy", shell_output("#{bin}/sloppy --version")
             end
           end
           FORMULA
 
       - name: Build bottle
-        run: brew install --build-bottle local/slopcheck/slopcheck
+        run: brew install --build-bottle local/sloppy/sloppy
 
       - name: Package bottle
         run: |
@@ -86,25 +86,25 @@ jobs:
           brew bottle \
             --no-rebuild \
             --root-url="https://github.com/${REPO}/releases/download/${TAG}" \
-            local/slopcheck/slopcheck
+            local/sloppy/sloppy
 
       - name: Rename bottle to single-dash filename
         run: |
           cd "$RUNNER_TEMP"
-          for f in slopcheck--*.tar.gz; do
-            mv "$f" "${f/slopcheck--/slopcheck-}"
+          for f in sloppy--*.tar.gz; do
+            mv "$f" "${f/sloppy--/sloppy-}"
           done
 
       - name: Upload bottle to release
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
-          BOTTLE=$(ls "${RUNNER_TEMP}"/slopcheck-*.tar.gz)
+          BOTTLE=$(ls "${RUNNER_TEMP}"/sloppy-*.tar.gz)
           gh release upload "$TAG" "$BOTTLE" --clobber
 
       - name: Save bottle SHA256
         run: |
-          BOTTLE=$(ls "${RUNNER_TEMP}"/slopcheck-*.tar.gz)
+          BOTTLE=$(ls "${RUNNER_TEMP}"/sloppy-*.tar.gz)
           SHA=$(shasum -a 256 "$BOTTLE" | awk '{print $1}')
           mkdir -p bottle-sha
           echo "$SHA" > "bottle-sha/${{ matrix.bottle_tag }}"
@@ -127,7 +127,7 @@ jobs:
         id: source
         run: |
           curl -fsSL -o source.tar.gz \
-            "https://github.com/bradleydwyer/slopcheck/archive/refs/tags/${TAG}.tar.gz"
+            "https://github.com/bradleydwyer/sloppy/archive/refs/tags/${TAG}.tar.gz"
           SHA=$(sha256sum source.tar.gz | awk '{print $1}')
           echo "sha256=$SHA" >> "$GITHUB_OUTPUT"
 
@@ -148,9 +148,9 @@ jobs:
       - name: Check out tap repository
         uses: actions/checkout@v4
         with:
-          repository: bradleydwyer/homebrew-slopcheck
+          repository: bradleydwyer/homebrew-sloppy
           token: ${{ secrets.TAP_GITHUB_TOKEN }}
-          path: homebrew-slopcheck
+          path: homebrew-sloppy
 
       - name: Update formula
         env:
@@ -159,16 +159,16 @@ jobs:
           ARM64_SEQUOIA_SHA: ${{ steps.bottles.outputs.arm64_sequoia }}
           ARM64_SONOMA_SHA: ${{ steps.bottles.outputs.arm64_sonoma }}
         run: |
-          cat > homebrew-slopcheck/Formula/slopcheck.rb <<EOF
-          class Slopcheck < Formula
+          cat > homebrew-sloppy/Formula/sloppy.rb <<EOF
+          class Sloppy < Formula
             desc "Fast regex-based detection of AI prose tells. No LLM calls, no heavy NLP."
-            homepage "https://github.com/bradleydwyer/slopcheck"
-            url "https://github.com/bradleydwyer/slopcheck/archive/refs/tags/${TAG}.tar.gz"
+            homepage "https://github.com/bradleydwyer/sloppy"
+            url "https://github.com/bradleydwyer/sloppy/archive/refs/tags/${TAG}.tar.gz"
             sha256 "${SOURCE_SHA}"
             license "MIT"
 
             bottle do
-              root_url "https://github.com/bradleydwyer/slopcheck/releases/download/${TAG}"
+              root_url "https://github.com/bradleydwyer/sloppy/releases/download/${TAG}"
               sha256 cellar: :any_skip_relocation, arm64_tahoe:   "${ARM64_TAHOE_SHA}"
               sha256 cellar: :any_skip_relocation, arm64_sequoia: "${ARM64_SEQUOIA_SHA}"
               sha256 cellar: :any_skip_relocation, arm64_sonoma:  "${ARM64_SONOMA_SHA}"
@@ -181,16 +181,16 @@ jobs:
             end
 
             test do
-              assert_match "slopcheck", shell_output("#{bin}/slopcheck --version")
+              assert_match "sloppy", shell_output("#{bin}/sloppy --version")
             end
           end
           EOF
 
       - name: Commit and push formula update
         run: |
-          cd homebrew-slopcheck
+          cd homebrew-sloppy
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
-          git add Formula/slopcheck.rb
-          git commit -m "Update slopcheck to ${TAG}"
+          git add Formula/sloppy.rb
+          git commit -m "Update sloppy to ${TAG}"
           git push

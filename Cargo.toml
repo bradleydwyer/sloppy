@@ -1,12 +1,12 @@
 [package]
-name = "slopcheck"
+name = "sloppy"
 version = "0.5.2"
 edition = "2024"
 description = "Fast regex-based detection of AI prose tells. No LLM calls, no heavy NLP."
 license = "MIT"
 
 [[bin]]
-name = "slopcheck"
+name = "sloppy"
 path = "src/main.rs"
 
 [dependencies]

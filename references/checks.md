@@ -1,4 +1,4 @@
-# slopcheck — Checks Reference
+# sloppy — Checks Reference
 
 Fifteen regex-based checks, each pure functions: text in, flags out.
 

@@ -1,4 +1,4 @@
-# slopcheck
+# sloppy
 
 Fast regex-based detection of AI prose tells ("slop"). Scores text 0-100.
 
@@ -10,8 +10,8 @@ Works standalone as a CLI, or as Layer 1 of a two-layer system with the included
 
 **Homebrew (macOS):**
 ```bash
-brew tap bradleydwyer/slopcheck
-brew install slopcheck
+brew tap bradleydwyer/sloppy
+brew install sloppy
 ```
 
 **From source (requires Rust toolchain):**
@@ -22,38 +22,38 @@ cargo install --path .
 **Or build manually:**
 ```bash
 cargo build --release
-cp target/release/slopcheck ~/.local/bin/
+cp target/release/sloppy ~/.local/bin/
 ```
 
 ## Usage
 
 ```bash
 # Analyze a file
-slopcheck analyze README.md
+sloppy analyze README.md
 
 # Pipe from stdin
-echo "The vibrant tapestry of innovation delves deeper." | slopcheck analyze
+echo "The vibrant tapestry of innovation delves deeper." | sloppy analyze
 
 # JSON output for programmatic use
-slopcheck analyze -f json document.md
+sloppy analyze -f json document.md
 
 # Quiet mode — just score and pass/fail
-slopcheck analyze -q document.md
+sloppy analyze -q document.md
 
 # Custom threshold (default: 30)
-slopcheck analyze -t 20 document.md
+sloppy analyze -t 20 document.md
 
 # Disable specific checks
-slopcheck analyze --disable burstiness --disable rule_of_three document.md
+sloppy analyze --disable burstiness --disable rule_of_three document.md
 
 # Run only one check
-slopcheck analyze --only lexical_blacklist document.md
+sloppy analyze --only lexical_blacklist document.md
 
 # Analyze multiple files
-slopcheck analyze *.md
+sloppy analyze *.md
 
 # Generate a voice directive (system prompt to prevent slop at generation time)
-slopcheck voice
+sloppy voice
 ```
 
 ## What It Detects
@@ -91,7 +91,7 @@ Output includes per-check breakdowns showing which checks contributed most to th
 
 ## Agent Skill
 
-The included `SKILL.md` turns slopcheck into a two-layer system when used with any AI coding agent that supports skills (Claude Code, Amp, Goose, etc.):
+The included `SKILL.md` turns sloppy into a two-layer system when used with any AI coding agent that supports skills (Claude Code, Amp, Goose, etc.):
 
 - **Layer 1 (CLI):** Deterministic regex detection. Fast, consistent, handles counting and statistical analysis that LLMs can't do reliably.
 - **Layer 2 (LLM):** Contextual review guided by the skill. Interprets flags in context, catches what regex misses (hedging, equivocation, tonal flatness), judges false positives, and produces rewrites.
@@ -100,31 +100,31 @@ Install the CLI first, then add the skill to your agent:
 
 ```bash
 # Install the CLI
-brew install bradleydwyer/slopcheck/slopcheck
+brew install bradleydwyer/sloppy/sloppy
 
 # Add skill to your agent (example for Claude Code)
-ln -s /path/to/slopcheck ~/.claude/skills/slopcheck
+ln -s /path/to/sloppy ~/.claude/skills/sloppy
 ```
 
 Then ask your agent to review prose, and it will run the CLI, interpret the results, and offer contextual fixes. The `references/` directory contains the full check reference and contextual review guide that the skill loads.
 
 ## Voice Directive
 
-The `slopcheck voice` command generates a system prompt directive from the same rules the detector uses, so you can prevent slop at generation time rather than catching it after.
+The `sloppy voice` command generates a system prompt directive from the same rules the detector uses, so you can prevent slop at generation time rather than catching it after.
 
 ## Configuration
 
-Create a `.slopcheck.toml` in your project root:
+Create a `.sloppy.toml` in your project root:
 
 ```bash
-slopcheck config --init
+sloppy config --init
 ```
 
 You can add/remove words, adjust penalty weights, change thresholds, or disable checks entirely.
 
 ```bash
 # View resolved config
-slopcheck config --dump
+sloppy config --dump
 ```
 
 ## JSON Output Schema

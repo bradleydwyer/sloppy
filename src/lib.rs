@@ -1,4 +1,4 @@
-//! slopcheck: Fast regex-based detection of AI prose tells.
+//! sloppy: Fast regex-based detection of AI prose tells.
 //!
 //! No LLM calls, no heavy NLP. Pure regex. Runs in <10ms per piece.
 

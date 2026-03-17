@@ -486,7 +486,7 @@ dependencies = [
 ]
 
 [[package]]
-name = "slopcheck"
+name = "sloppy"
 version = "0.5.2"
 dependencies = [
  "assert_cmd",

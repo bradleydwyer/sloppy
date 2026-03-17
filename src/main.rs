@@ -1,4 +1,4 @@
-//! CLI for slopcheck.
+//! CLI for sloppy.
 
 use std::collections::BTreeSet;
 use std::io::{IsTerminal, Read};
@@ -8,13 +8,13 @@ use std::process;
 use clap::{Parser, Subcommand};
 use serde_json::json;
 
-use slopcheck::config::{dump_config, load_config};
-use slopcheck::detector::analyze;
-use slopcheck::voice::generate_voice_directive;
+use sloppy::config::{dump_config, load_config};
+use sloppy::detector::analyze;
+use sloppy::voice::generate_voice_directive;
 
 #[derive(Parser)]
 #[command(
-    name = "slopcheck",
+    name = "sloppy",
     version,
     about = "Fast regex-based detection of AI prose tells."
 )]
@@ -68,7 +68,7 @@ enum Commands {
         #[arg(long)]
         dump: bool,
 
-        /// Create a .slopcheck.toml template.
+        /// Create a .sloppy.toml template.
         #[arg(long)]
         init: bool,
     },
@@ -193,7 +193,7 @@ fn cmd_analyze(
 }
 
 fn print_result(
-    result: &slopcheck::SlopResult,
+    result: &sloppy::SlopResult,
     effective_threshold: u32,
     format: &str,
     quiet: bool,
@@ -289,7 +289,7 @@ fn cmd_voice(config_path: Option<PathBuf>) {
 
 fn cmd_config(dump: bool, init: bool) {
     if init {
-        let target = ".slopcheck.toml";
+        let target = ".sloppy.toml";
         let defaults = include_str!("defaults.toml");
         std::fs::write(target, defaults).unwrap_or_else(|e| {
             eprintln!("Error writing {target}: {e}");
