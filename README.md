@@ -1,24 +1,32 @@
 # sloppy
 
-Fast regex-based detection of AI prose tells ("slop"). Scores text 0-100.
+Detect AI prose tells ("slop") in text. Scores 0-100 using regex pattern matching. No LLM calls, no heavy NLP. Runs in under 30ms.
 
-No LLM calls. No heavy NLP. Single static binary. Runs in <30ms.
+Works standalone as a CLI, or paired with an agent skill for LLM-powered contextual review on top.
 
-Works standalone as a CLI, or as Layer 1 of a two-layer system with the included agent skill (SKILL.md) providing LLM-powered contextual review on top.
+## Install
+
+```bash
+brew install bradleydwyer/tap/sloppy
+```
+
+Or from source:
+
+```bash
+cargo install --path .
+```
 
 ## Agent Skill
 
-Sloppy includes a built-in skill installer for AI coding agents. The skill turns sloppy into a two-layer system:
+sloppy includes a skill installer for AI coding agents. The skill adds an LLM review layer on top of the CLI:
 
-- **Layer 1 (CLI):** Deterministic regex detection. Fast, consistent, handles counting and statistical analysis that LLMs can't do reliably.
-- **Layer 2 (LLM):** Contextual review guided by the skill. Interprets flags in context, catches what regex misses (hedging, equivocation, tonal flatness), judges false positives, and produces rewrites.
+- **CLI layer:** Regex-based detection. Fast, deterministic, handles counting and statistics.
+- **LLM layer:** Contextual review guided by the skill. Catches hedging, tonal flatness, and false positives. Produces rewrites.
 
 ### Install the skill
 
-After installing the CLI, run:
-
 ```bash
-# Claude Code (default — full two-layer skill with references)
+# Claude Code (full skill with references)
 sloppy skill --install
 
 # Other agents
@@ -33,38 +41,17 @@ sloppy skill --install --agent goose
 sloppy skill --install --agent aider
 ```
 
-Claude Code gets the full skill (SKILL.md + reference files in `~/.claude/skills/sloppy/`). Other agents get a rules file in their native format that teaches them how to use the sloppy CLI.
+Claude Code gets the full skill (SKILL.md + reference files). Other agents get a rules file in their native format.
 
 Run `sloppy skill` with no flags to see all supported agents and their install paths.
 
 ### What you can ask
 
-- **"check this for slop"** — runs the CLI, reports the score, explains every flag in context, identifies false positives, and does a contextual review beyond what regex catches.
-- **"clean this up, it reads too AI"** — analyzes, rewrites, and re-checks until the score passes.
-- **"generate a prompt"** — produces a chat or system prompt to prevent slop at generation time.
+- **"check this for slop"** - runs the CLI, reports the score, explains flags in context, identifies false positives, does a contextual review
+- **"clean this up, it reads too AI"** - analyzes, rewrites, and re-checks until the score passes
+- **"generate a prompt"** - produces a chat or system prompt to prevent slop at generation time
 
-## Install (CLI)
-
-**Homebrew (macOS):**
-```bash
-brew install bradleydwyer/tap/sloppy
-```
-
-**From source (any platform, requires Rust toolchain):**
-```bash
-cargo install --path .
-```
-
-**Or build manually:**
-```bash
-cargo build --release
-# macOS/Linux:
-cp target/release/sloppy ~/.local/bin/
-# Windows:
-copy target\release\sloppy.exe %USERPROFILE%\.local\bin\
-```
-
-## CLI Usage
+## Usage
 
 ```bash
 # Analyze a file
@@ -73,10 +60,10 @@ sloppy analyze README.md
 # Pipe from stdin
 echo "The vibrant tapestry of innovation delves deeper." | sloppy analyze
 
-# JSON output for programmatic use
+# JSON output
 sloppy analyze -f json document.md
 
-# Quiet mode — just score and pass/fail
+# Quiet mode (just score and pass/fail)
 sloppy analyze -q document.md
 
 # Custom threshold (default: 30)
@@ -88,16 +75,16 @@ sloppy analyze --disable burstiness --disable rule_of_three document.md
 # Run only one check
 sloppy analyze --only lexical_blacklist document.md
 
-# Analyze multiple files
+# Multiple files
 sloppy analyze *.md
 
-# Generate a prompt for clean writing (paste into any chat window)
+# Generate a prompt for clean writing
 sloppy prompt
 
-# Generate a prompt for cleaning up sloppy text
+# Generate a cleanup prompt
 sloppy prompt cleanup
 
-# Raw system prompt constraints (for API system prompts)
+# Raw system prompt constraints (for API use)
 sloppy prompt system
 
 # Copy any prompt to clipboard
@@ -106,46 +93,46 @@ sloppy prompt cleanup --copy
 
 ## What It Detects
 
-15 checks across lexical, structural, and statistical dimensions:
+15 checks across lexical, structural, and statistical patterns:
 
-| Check | Detects | Why It's an AI Tell |
-|-------|---------|-------------------|
-| **lexical_blacklist** | "delve", "tapestry", "vibrant", "synergy", "paradigm", 90+ more words and phrases | These appear in AI output at 10-50x the rate of human writing |
-| **trailing_participle** | ", reflecting the community's deep commitment." | The single most reliable structural AI tell |
+| Check | Example | Why |
+|-------|---------|-----|
+| **lexical_blacklist** | "delve", "tapestry", "vibrant", 90+ more | Appear 10-50x more in AI output than human writing |
+| **trailing_participle** | ", reflecting the community's deep commitment." | Most reliable structural AI tell |
 | **rule_of_three** | "safe, efficient, and reliable" | AI defaults to comma-separated triplets |
-| **em_dash_count** | Any em-dash in a piece | AI scatters em-dashes; humans use them sparingly |
-| **transition_openers** | "Moreover", "Furthermore", "Additionally", "Notably" | AI reaches for explicit logical connectors |
-| **burstiness** | Sentences all roughly the same length | Human writing has high variance; AI flattens it |
-| **copulative_inflation** | "serves as", "stands as", "functions as" | AI inflates "is" into fancier verbs |
-| **formulaic_conclusion** | "In summary", "Overall", "Moving forward", "Key takeaways" | Boilerplate wrap-ups from training corpora |
+| **em_dash_count** | Any em-dash | AI scatters them; humans use them sparingly |
+| **transition_openers** | "Moreover", "Furthermore", "Additionally" | AI leans on explicit connectors |
+| **burstiness** | Sentences all roughly the same length | Humans vary sentence length more |
+| **copulative_inflation** | "serves as", "stands as", "functions as" | AI inflates "is" into fancier constructions |
+| **formulaic_conclusion** | "In summary", "Moving forward", "Key takeaways" | Boilerplate wrap-ups |
 | **patterned_negation** | "It's not X. It's Y." | A rhetorical device AI overuses |
-| **throat_clearing** | "Here's the thing:", "Let me be clear", "The truth is" | Meta-commentary that delays the point |
-| **chatbot_artifacts** | "Great question!", "I'd be happy to", "Feel free to" | Dead giveaways of unedited AI output |
-| **paragraph_uniformity** | All paragraphs roughly the same length | AI produces uniform 3-sentence paragraphs |
-| **emphasis_crutches** | "Full stop.", "Let that sink in.", "Make no mistake" | Telling instead of showing importance |
-| **vague_attribution** | "many experts agree", "studies show" | Weasel-phrase sourcing without actual citations |
-| **wordiness** | "in order to", "due to the fact that" | Verbose constructions AI uses at high rates |
+| **throat_clearing** | "Here's the thing:", "Let me be clear" | Meta-commentary that delays the point |
+| **chatbot_artifacts** | "Great question!", "I'd be happy to" | Unedited chatbot output |
+| **paragraph_uniformity** | All paragraphs roughly the same length | AI produces uniform blocks |
+| **emphasis_crutches** | "Full stop.", "Let that sink in." | Tells rather than shows importance |
+| **vague_attribution** | "many experts agree", "studies show" | Weasel phrases without actual citations |
+| **wordiness** | "in order to", "due to the fact that" | Verbose constructions AI favors |
 
 ## Scoring
 
-Each check contributes a penalty (per flag, capped per check). Raw penalties are normalized to 0-100. Default pass threshold is 30.
+Each check adds a penalty (per flag, capped per check). Raw penalties normalize to 0-100. Default pass threshold is 30.
 
-- **0-10**: Clean human prose
+- **0-10**: Clean prose
 - **10-30**: Minor tells, probably fine
-- **30-60**: Noticeable AI patterns
-- **60-100**: Unmistakably AI-generated
+- **30-60**: Noticeable patterns
+- **60-100**: Unmistakable
 
-Output includes per-check breakdowns showing which checks contributed most to the score.
+Output includes per-check breakdowns showing which checks contributed most.
 
 ## Prompt Generation
 
-The `sloppy prompt` command generates prompts you can paste into any LLM chat window or system prompt to prevent slop at generation time:
+`sloppy prompt` generates prompts you can paste into any LLM to prevent slop:
 
-- **`sloppy prompt`** (or `sloppy prompt generate`) — a chat-ready prompt for writing clean prose
-- **`sloppy prompt cleanup`** — a chat-ready prompt for rewriting sloppy text (includes a `[PASTE YOUR TEXT HERE]` placeholder)
-- **`sloppy prompt system`** — raw constraint block for API system prompts
+- **`sloppy prompt`** - chat-ready prompt for writing clean
+- **`sloppy prompt cleanup`** - chat-ready prompt for rewriting sloppy text
+- **`sloppy prompt system`** - raw constraint block for API system prompts
 
-Add `--copy` to any of these to copy the output to your clipboard.
+Add `--copy` to put any of these on your clipboard.
 
 ## Configuration
 
@@ -155,14 +142,14 @@ Create a `.sloppy.toml` in your project root:
 sloppy config --init
 ```
 
-You can add/remove words, adjust penalty weights, change thresholds, or disable checks entirely. Users who want to allow em-dashes can set `max_allowed = 1` (or higher) in their config.
+Add/remove words, adjust penalty weights, change thresholds, or disable checks entirely.
 
 ```bash
 # View resolved config
 sloppy config --dump
 ```
 
-## JSON Output Schema
+## JSON Output
 
 ```json
 {
