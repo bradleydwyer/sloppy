@@ -31,7 +31,7 @@ Fifteen regex-based checks, each pure functions: text in, flags out.
 **Why:** AI defaults to three-item lists. Humans use two or four more naturally.
 
 ### em_dash_count
-**Detects:** More than 1 em-dash per piece.
+**Detects:** Any em-dash in a piece.
 **Penalty:** 10 per flag, max 10.
 **Why:** AI scatters em-dashes everywhere. Humans use them sparingly.
 

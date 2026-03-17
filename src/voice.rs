@@ -86,11 +86,18 @@ fn build_punctuation_section(config: &Config) -> String {
             .params
             .get("max_allowed")
             .and_then(|v| v.as_integer())
-            .unwrap_or(1);
-        lines.push(format!(
-            "- Maximum {max_allowed} em-dash(\u{2014}) per piece. \
-                 Prefer parentheses or semicolons for asides."
-        ));
+            .unwrap_or(0);
+        if max_allowed == 0 {
+            lines.push(
+                "- Do not use em-dashes (\u{2014}). Use parentheses, semicolons, or commas instead."
+                    .to_string(),
+            );
+        } else {
+            lines.push(format!(
+                "- Maximum {max_allowed} em-dash(\u{2014}) per piece. \
+                     Prefer parentheses or semicolons for asides."
+            ));
+        }
     }
 
     if let Some(trailing) = config.checks.get("trailing_participle")

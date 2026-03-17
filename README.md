@@ -6,7 +6,34 @@ No LLM calls. No heavy NLP. Single static binary. Runs in <30ms.
 
 Works standalone as a CLI, or as Layer 1 of a two-layer system with the included agent skill (SKILL.md) providing LLM-powered contextual review on top.
 
-## Install
+## Agent Skill (Claude Code, Amp, Goose, etc.)
+
+The included `SKILL.md` turns sloppy into a two-layer system when used with any AI coding agent that supports skills:
+
+- **Layer 1 (CLI):** Deterministic regex detection. Fast, consistent, handles counting and statistical analysis that LLMs can't do reliably.
+- **Layer 2 (LLM):** Contextual review guided by the skill. Interprets flags in context, catches what regex misses (hedging, equivocation, tonal flatness), judges false positives, and produces rewrites.
+
+### Setup
+
+Install the CLI, then add the skill to your agent:
+
+```bash
+# Install the CLI
+brew install bradleydwyer/sloppy/sloppy
+
+# Add skill to your agent (example for Claude Code)
+ln -s /path/to/sloppy ~/.claude/skills/sloppy
+```
+
+### What you can ask
+
+- **"check this for slop"** — runs the CLI, reports the score, explains every flag in context, identifies false positives, and does a contextual review beyond what regex catches.
+- **"clean this up, it reads too AI"** — analyzes, rewrites, and re-checks until the score passes.
+- **"generate a voice directive"** — produces a system prompt constraint block to prevent slop at generation time.
+
+The `references/` directory contains the full check reference and contextual review guide that the skill loads.
+
+## Install (CLI)
 
 **Homebrew (macOS):**
 ```bash
@@ -25,7 +52,7 @@ cargo build --release
 cp target/release/sloppy ~/.local/bin/
 ```
 
-## Usage
+## CLI Usage
 
 ```bash
 # Analyze a file
@@ -65,7 +92,7 @@ sloppy voice
 | **lexical_blacklist** | "delve", "tapestry", "vibrant", "synergy", "paradigm", 90+ more words and phrases | These appear in AI output at 10-50x the rate of human writing |
 | **trailing_participle** | ", reflecting the community's deep commitment." | The single most reliable structural AI tell |
 | **rule_of_three** | "safe, efficient, and reliable" | AI defaults to comma-separated triplets |
-| **em_dash_count** | More than 1 em-dash per piece | AI scatters em-dashes; humans use them sparingly |
+| **em_dash_count** | Any em-dash in a piece | AI scatters em-dashes; humans use them sparingly |
 | **transition_openers** | "Moreover", "Furthermore", "Additionally", "Notably" | AI reaches for explicit logical connectors |
 | **burstiness** | Sentences all roughly the same length | Human writing has high variance; AI flattens it |
 | **copulative_inflation** | "serves as", "stands as", "functions as" | AI inflates "is" into fancier verbs |
@@ -89,25 +116,6 @@ Each check contributes a penalty (per flag, capped per check). Raw penalties are
 
 Output includes per-check breakdowns showing which checks contributed most to the score.
 
-## Agent Skill
-
-The included `SKILL.md` turns sloppy into a two-layer system when used with any AI coding agent that supports skills (Claude Code, Amp, Goose, etc.):
-
-- **Layer 1 (CLI):** Deterministic regex detection. Fast, consistent, handles counting and statistical analysis that LLMs can't do reliably.
-- **Layer 2 (LLM):** Contextual review guided by the skill. Interprets flags in context, catches what regex misses (hedging, equivocation, tonal flatness), judges false positives, and produces rewrites.
-
-Install the CLI first, then add the skill to your agent:
-
-```bash
-# Install the CLI
-brew install bradleydwyer/sloppy/sloppy
-
-# Add skill to your agent (example for Claude Code)
-ln -s /path/to/sloppy ~/.claude/skills/sloppy
-```
-
-Then ask your agent to review prose, and it will run the CLI, interpret the results, and offer contextual fixes. The `references/` directory contains the full check reference and contextual review guide that the skill loads.
-
 ## Voice Directive
 
 The `sloppy voice` command generates a system prompt directive from the same rules the detector uses, so you can prevent slop at generation time rather than catching it after.
@@ -120,7 +128,7 @@ Create a `.sloppy.toml` in your project root:
 sloppy config --init
 ```
 
-You can add/remove words, adjust penalty weights, change thresholds, or disable checks entirely.
+You can add/remove words, adjust penalty weights, change thresholds, or disable checks entirely. Users who want to allow em-dashes can set `max_allowed = 1` (or higher) in their config.
 
 ```bash
 # View resolved config

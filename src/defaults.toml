@@ -70,7 +70,7 @@ enabled = true
 penalty_per_flag = 10
 max_penalty = 10
 severity = "warning"
-max_allowed = 1
+max_allowed = 0
 
 [checks.trailing_participle]
 enabled = true

@@ -253,7 +253,7 @@ pub fn check_em_dash_count(text: &str, params: Option<&toml::Table>) -> Vec<Slop
     let max_allowed = params
         .and_then(|p| p.get("max_allowed"))
         .and_then(|v| v.as_integer())
-        .unwrap_or(1) as usize;
+        .unwrap_or(0) as usize;
 
     let em_dashes = text.chars().filter(|&c| c == '\u{2014}').count();
     if em_dashes <= max_allowed {
@@ -1404,8 +1404,9 @@ mod tests {
     }
 
     #[test]
-    fn test_one_em_dash_passes() {
-        assert!(check_em_dash_count("A pause\u{2014}and then silence.", None).is_empty());
+    fn test_one_em_dash_flagged() {
+        let flags = check_em_dash_count("A pause\u{2014}and then silence.", None);
+        assert_eq!(flags.len(), 1);
     }
 
     #[test]
