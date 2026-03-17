@@ -5,12 +5,12 @@ use std::io::{IsTerminal, Read};
 use std::path::PathBuf;
 use std::process;
 
-use clap::{Parser, Subcommand};
+use clap::{Parser, Subcommand, ValueEnum};
 use serde_json::json;
 
 use sloppy::config::{dump_config, load_config};
 use sloppy::detector::analyze;
-use sloppy::voice::generate_voice_directive;
+use sloppy::voice::{generate_chat_prompt, generate_voice_directive};
 
 #[derive(Parser)]
 #[command(
@@ -55,8 +55,16 @@ enum Commands {
         quiet: bool,
     },
 
-    /// Generate a voice directive prompt from the current configuration.
-    Voice {
+    /// Generate a prompt to paste into any LLM chat window or system prompt.
+    Prompt {
+        /// What kind of prompt to generate
+        #[arg(value_enum, default_value_t = PromptMode::Generate)]
+        mode: PromptMode,
+
+        /// Copy output to clipboard
+        #[arg(long)]
+        copy: bool,
+
         /// Config file path
         #[arg(short, long)]
         config: Option<PathBuf>,
@@ -74,6 +82,16 @@ enum Commands {
     },
 }
 
+#[derive(Clone, ValueEnum)]
+enum PromptMode {
+    /// Prompt for writing clean, human-sounding prose
+    Generate,
+    /// Prompt for rewriting sloppy text
+    Cleanup,
+    /// Raw system-level constraint block (for API system prompts)
+    System,
+}
+
 fn main() {
     let cli = Cli::parse();
 
@@ -88,9 +106,11 @@ fn main() {
             quiet,
         } => cmd_analyze(file, threshold, config_path, format, disable, only, quiet),
 
-        Commands::Voice {
+        Commands::Prompt {
+            mode,
+            copy,
             config: config_path,
-        } => cmd_voice(config_path),
+        } => cmd_prompt(mode, copy, config_path),
 
         Commands::Config { dump, init } => cmd_config(dump, init),
     }
@@ -278,13 +298,53 @@ fn print_result(
     }
 }
 
-fn cmd_voice(config_path: Option<PathBuf>) {
+fn cmd_prompt(mode: PromptMode, copy: bool, config_path: Option<PathBuf>) {
     let config = if let Some(ref cp) = config_path {
         load_config(Some(cp.as_path()), None)
     } else {
         load_config(None, None)
     };
-    println!("{}", generate_voice_directive(&config));
+
+    let output = match mode {
+        PromptMode::System => generate_voice_directive(&config),
+        PromptMode::Generate => generate_chat_prompt(&config, "generate"),
+        PromptMode::Cleanup => generate_chat_prompt(&config, "cleanup"),
+    };
+
+    println!("{output}");
+
+    if copy {
+        copy_to_clipboard(&output);
+    }
+}
+
+fn copy_to_clipboard(text: &str) {
+    use std::io::Write;
+    use std::process::Command;
+
+    // Try pbcopy (macOS), then xclip, then xsel
+    let commands = [
+        ("pbcopy", &[] as &[&str]),
+        ("xclip", &["-selection", "clipboard"] as &[&str]),
+        ("xsel", &["--clipboard", "--input"] as &[&str]),
+    ];
+
+    for (cmd, args) in &commands {
+        if let Ok(mut child) = Command::new(cmd)
+            .args(*args)
+            .stdin(std::process::Stdio::piped())
+            .spawn()
+        {
+            if let Some(ref mut stdin) = child.stdin {
+                if stdin.write_all(text.as_bytes()).is_ok() && child.wait().is_ok() {
+                    eprintln!("Copied to clipboard.");
+                    return;
+                }
+            }
+        }
+    }
+
+    eprintln!("Could not copy to clipboard (no pbcopy, xclip, or xsel found).");
 }
 
 fn cmd_config(dump: bool, init: bool) {

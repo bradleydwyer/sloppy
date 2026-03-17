@@ -1,6 +1,6 @@
 [package]
 name = "sloppy"
-version = "0.5.2"
+version = "0.6.0"
 edition = "2024"
 description = "Fast regex-based detection of AI prose tells. No LLM calls, no heavy NLP."
 license = "MIT"

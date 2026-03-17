@@ -10,10 +10,10 @@ allowed-tools:
   - Grep
   - Glob
 user-invocable: true
-argument-hint: "[file to review, or 'voice' to generate prevention prompt]"
+argument-hint: "[file to review, or 'prompt' to generate a chat/system prompt]"
 metadata:
   author: bradleydwyer
-  version: "0.5.2"
+  version: "0.6.0"
   status: experimental
 ---
 
@@ -60,7 +60,7 @@ Determine the mode from the user's request:
 |---|---|---|
 | "check this", "review this text", "is this sloppy?" | **Analyze** | Step 1 → full workflow |
 | "fix this", "clean this up", "rewrite this" | **Fix** | Step 1 → Step 4 (produce rewrite) |
-| "voice directive", "prevention prompt", "anti-slop prompt" | **Voice** | Voice Directive section |
+| "voice directive", "prevention prompt", "anti-slop prompt", "give me a prompt" | **Prompt** | Prompt Generation section |
 | file path or pasted text with no other instruction | **Analyze** | Step 1 → full workflow |
 
 ---
@@ -155,17 +155,25 @@ Report the new score. If it still fails the threshold, iterate on remaining flag
 
 ---
 
-## Voice Directive (Prevention)
+## Prompt Generation (Prevention)
 
 When the user wants to prevent slop at generation time rather than catch it after:
 
 ```bash
-sloppy voice
+# Prompt for writing clean prose (paste into any chat window)
+sloppy prompt generate
+
+# Prompt for cleaning up existing sloppy text
+sloppy prompt cleanup
+
+# Raw system-level constraint block (for API system prompts)
+sloppy prompt system
+
+# Any of the above with --copy to copy to clipboard
+sloppy prompt generate --copy
 ```
 
-This outputs a constraint block derived from the same rules the detector uses. Inject it into any LLM system prompt where output needs to read as human-written. Prevention and detection stay in sync because they share the same config.
-
-If the user has a custom `.sloppy.toml`, the voice directive reflects their custom word lists and settings.
+The `generate` and `cleanup` modes produce chat-ready prompts that work when pasted into ChatGPT, Claude, Gemini, or any other chat interface. The `system` mode produces a raw constraint block for API system prompts. All modes reflect custom `.sloppy.toml` settings if present.
 
 ---
 
@@ -212,8 +220,17 @@ sloppy analyze --only lexical_blacklist file.md
 # Analyze multiple files
 sloppy analyze *.md
 
-# Generate voice directive
-sloppy voice
+# Generate a prompt for clean writing (paste into any chat)
+sloppy prompt generate
+
+# Generate a prompt for cleaning up sloppy text
+sloppy prompt cleanup
+
+# Generate raw system prompt constraints
+sloppy prompt system
+
+# Any prompt mode with clipboard copy
+sloppy prompt cleanup --copy
 
 # Initialize config
 sloppy config --init
@@ -229,6 +246,6 @@ sloppy config --dump
 - **Score ≤ 10 is the goal** for polished prose. 10–30 is acceptable for internal docs.
 - **Don't chase score 0.** Some flagged patterns are legitimate in context. Judge false positives.
 - **Use `--disable` for domain-specific exceptions.** Technical docs might legitimately use "robust" — disable `lexical_blacklist` or customize the word list.
-- **The voice directive is the highest-leverage output.** One injection into a system prompt prevents hundreds of downstream fixes.
+- **The prompt command is the highest-leverage output.** One prompt pasted into a chat window or system prompt prevents hundreds of downstream fixes.
 - **JSON output + jq** makes sloppy composable in pipelines: `sloppy analyze -f json file.md | jq '.flags[] | .check_name'`
 - **Run on your own prompts and system messages too.** AI slop in prompts begets AI slop in outputs.

@@ -261,6 +261,56 @@ fn build_tone_section(config: &Config) -> String {
     lines.join("\n")
 }
 
+/// Generate a chat-ready prompt for pasting into any LLM chat window.
+///
+/// Two modes:
+/// - `generate`: produces a prompt that instructs the LLM to write clean prose
+/// - `cleanup`: produces a prompt that instructs the LLM to rewrite sloppy text
+pub fn generate_chat_prompt(config: &Config, mode: &str) -> String {
+    let directive = generate_voice_directive(config);
+
+    match mode {
+        "cleanup" => format!(
+            "You are a prose editor specializing in removing AI-generated writing \
+             patterns. I'm going to give you text that sounds like it was written by \
+             an AI. Rewrite it so it reads like a human wrote it.\n\
+             \n\
+             Rules to follow:\n\
+             \n\
+             {directive}\n\
+             \n\
+             Additional guidance:\n\
+             - Don't just swap flagged words for synonyms. Restructure sentences so \
+             they don't need those words.\n\
+             - Replace vague abstractions with specific, concrete details.\n\
+             - Take committed stances instead of hedging.\n\
+             - Vary sentence length aggressively. Mix short fragments with longer \
+             compound sentences.\n\
+             - End when you're done. No summary paragraph.\n\
+             \n\
+             Here is the text to rewrite:\n\
+             \n\
+             [PASTE YOUR TEXT HERE]"
+        ),
+        _ => format!(
+            "You are a writer who produces clean, human-sounding prose. Follow \
+             these constraints for everything you write in this conversation:\n\
+             \n\
+             {directive}\n\
+             \n\
+             Additional guidance:\n\
+             - Anchor your writing in specific, concrete, unusual details rather \
+             than generic abstractions.\n\
+             - Take definitive stances. Don't hedge or both-sides things.\n\
+             - Vary sentence length aggressively. Mix short fragments with longer \
+             compound sentences.\n\
+             - End when you're done. No summary paragraph, no \"in conclusion\".\n\
+             - Write like a person who has opinions and knows things, not like a \
+             helpful assistant."
+        ),
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;

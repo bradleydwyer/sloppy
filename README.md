@@ -35,13 +35,13 @@ The `references/` directory contains the full check reference and contextual rev
 
 ## Install (CLI)
 
-**Homebrew (macOS):**
+**Homebrew (macOS/Linux):**
 ```bash
 brew tap bradleydwyer/sloppy
 brew install sloppy
 ```
 
-**From source (requires Rust toolchain):**
+**From source (any platform, requires Rust toolchain):**
 ```bash
 cargo install --path .
 ```
@@ -49,7 +49,10 @@ cargo install --path .
 **Or build manually:**
 ```bash
 cargo build --release
+# macOS/Linux:
 cp target/release/sloppy ~/.local/bin/
+# Windows:
+copy target\release\sloppy.exe %USERPROFILE%\.local\bin\
 ```
 
 ## CLI Usage
@@ -79,8 +82,17 @@ sloppy analyze --only lexical_blacklist document.md
 # Analyze multiple files
 sloppy analyze *.md
 
-# Generate a voice directive (system prompt to prevent slop at generation time)
-sloppy voice
+# Generate a prompt for clean writing (paste into any chat window)
+sloppy prompt
+
+# Generate a prompt for cleaning up sloppy text
+sloppy prompt cleanup
+
+# Raw system prompt constraints (for API system prompts)
+sloppy prompt system
+
+# Copy any prompt to clipboard
+sloppy prompt cleanup --copy
 ```
 
 ## What It Detects
@@ -116,9 +128,15 @@ Each check contributes a penalty (per flag, capped per check). Raw penalties are
 
 Output includes per-check breakdowns showing which checks contributed most to the score.
 
-## Voice Directive
+## Prompt Generation
 
-The `sloppy voice` command generates a system prompt directive from the same rules the detector uses, so you can prevent slop at generation time rather than catching it after.
+The `sloppy prompt` command generates prompts you can paste into any LLM chat window or system prompt to prevent slop at generation time:
+
+- **`sloppy prompt`** (or `sloppy prompt generate`) — a chat-ready prompt for writing clean prose
+- **`sloppy prompt cleanup`** — a chat-ready prompt for rewriting sloppy text (includes a `[PASTE YOUR TEXT HERE]` placeholder)
+- **`sloppy prompt system`** — raw constraint block for API system prompts
+
+Add `--copy` to any of these to copy the output to your clipboard.
 
 ## Configuration
 

@@ -89,16 +89,43 @@ fn test_empty_input() {
 }
 
 // ===========================================================================
-// voice subcommand
+// prompt subcommand
 // ===========================================================================
 
 #[test]
-fn test_voice_generates_output() {
+fn test_prompt_system() {
     cmd()
-        .arg("voice")
+        .args(["prompt", "system"])
         .assert()
         .success()
         .stdout(predicate::str::contains("LEXICAL RESTRICTIONS"));
+}
+
+#[test]
+fn test_prompt_generate() {
+    cmd()
+        .args(["prompt", "generate"])
+        .assert()
+        .success()
+        .stdout(predicate::str::contains("clean, human-sounding prose"));
+}
+
+#[test]
+fn test_prompt_cleanup() {
+    cmd()
+        .args(["prompt", "cleanup"])
+        .assert()
+        .success()
+        .stdout(predicate::str::contains("PASTE YOUR TEXT HERE"));
+}
+
+#[test]
+fn test_prompt_default_is_generate() {
+    cmd()
+        .arg("prompt")
+        .assert()
+        .success()
+        .stdout(predicate::str::contains("clean, human-sounding prose"));
 }
 
 // ===========================================================================
