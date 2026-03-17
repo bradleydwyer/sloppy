@@ -194,11 +194,7 @@ pub fn analyze(text: &str, slop_threshold: u32, config: Option<&Config>) -> Slop
     let floor: u32 = all_maxes.iter().take(3).sum();
     let effective_max = applicable_max.max(floor);
 
-    let max_raw = if effective_max == 0 {
-        1
-    } else {
-        effective_max
-    };
+    let max_raw = if effective_max == 0 { 1 } else { effective_max };
     let score = ((raw_penalty as f64 / max_raw as f64) * 100.0).floor() as u32;
     let score = score.min(100);
 
