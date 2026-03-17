@@ -1,5 +1,9 @@
 # sloppy
 
+<p align="center">
+  <img src="logos/sloppy-logo-2.png" width="256" alt="sloppy logo" />
+</p>
+
 Detect AI prose tells ("slop") in text. Scores 0-100 using regex pattern matching. No LLM calls, no heavy NLP. Runs in under 30ms.
 
 Works standalone as a CLI, or paired with an agent skill for LLM-powered contextual review on top.
