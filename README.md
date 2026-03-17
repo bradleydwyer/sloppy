@@ -45,10 +45,9 @@ Run `sloppy skill` with no flags to see all supported agents and their install p
 
 ## Install (CLI)
 
-**Homebrew (macOS/Linux):**
+**Homebrew (macOS):**
 ```bash
-brew tap bradleydwyer/sloppy
-brew install sloppy
+brew install bradleydwyer/tap/sloppy
 ```
 
 **From source (any platform, requires Rust toolchain):**
