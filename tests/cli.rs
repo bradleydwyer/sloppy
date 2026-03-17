@@ -129,6 +129,56 @@ fn test_prompt_default_is_generate() {
 }
 
 // ===========================================================================
+// skill subcommand
+// ===========================================================================
+
+#[test]
+fn test_skill_no_install_shows_help() {
+    cmd()
+        .arg("skill")
+        .assert()
+        .success()
+        .stdout(predicate::str::contains("Supported agents"));
+}
+
+#[test]
+fn test_skill_install_claude() {
+    let dir = TempDir::new().unwrap();
+    // Set HOME to temp dir so we don't clobber real skills
+    cmd()
+        .args(["skill", "--install"])
+        .env("HOME", dir.path())
+        .assert()
+        .success()
+        .stdout(predicate::str::contains(
+            "Installed sloppy skill for Claude Code",
+        ));
+    assert!(dir.path().join(".claude/skills/sloppy/SKILL.md").exists());
+    assert!(
+        dir.path()
+            .join(".claude/skills/sloppy/references/checks.md")
+            .exists()
+    );
+    assert!(
+        dir.path()
+            .join(".claude/skills/sloppy/references/contextual-review.md")
+            .exists()
+    );
+}
+
+#[test]
+fn test_skill_install_cursor() {
+    let dir = TempDir::new().unwrap();
+    cmd()
+        .args(["skill", "--install", "--agent", "cursor"])
+        .current_dir(dir.path())
+        .assert()
+        .success()
+        .stdout(predicate::str::contains("Installed sloppy rules"));
+    assert!(dir.path().join(".cursor/rules/sloppy.mdc").exists());
+}
+
+// ===========================================================================
 // config subcommand
 // ===========================================================================
 

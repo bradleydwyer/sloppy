@@ -6,32 +6,42 @@ No LLM calls. No heavy NLP. Single static binary. Runs in <30ms.
 
 Works standalone as a CLI, or as Layer 1 of a two-layer system with the included agent skill (SKILL.md) providing LLM-powered contextual review on top.
 
-## Agent Skill (Claude Code, Amp, Goose, etc.)
+## Agent Skill
 
-The included `SKILL.md` turns sloppy into a two-layer system when used with any AI coding agent that supports skills:
+Sloppy includes a built-in skill installer for AI coding agents. The skill turns sloppy into a two-layer system:
 
 - **Layer 1 (CLI):** Deterministic regex detection. Fast, consistent, handles counting and statistical analysis that LLMs can't do reliably.
 - **Layer 2 (LLM):** Contextual review guided by the skill. Interprets flags in context, catches what regex misses (hedging, equivocation, tonal flatness), judges false positives, and produces rewrites.
 
-### Setup
+### Install the skill
 
-Install the CLI, then add the skill to your agent:
+After installing the CLI, run:
 
 ```bash
-# Install the CLI
-brew install bradleydwyer/sloppy/sloppy
+# Claude Code (default — full two-layer skill with references)
+sloppy skill --install
 
-# Add skill to your agent (example for Claude Code)
-ln -s /path/to/sloppy ~/.claude/skills/sloppy
+# Other agents
+sloppy skill --install --agent cursor
+sloppy skill --install --agent windsurf
+sloppy skill --install --agent copilot
+sloppy skill --install --agent cline
+sloppy skill --install --agent roo
+sloppy skill --install --agent continue
+sloppy skill --install --agent amp
+sloppy skill --install --agent goose
+sloppy skill --install --agent aider
 ```
+
+Claude Code gets the full skill (SKILL.md + reference files in `~/.claude/skills/sloppy/`). Other agents get a rules file in their native format that teaches them how to use the sloppy CLI.
+
+Run `sloppy skill` with no flags to see all supported agents and their install paths.
 
 ### What you can ask
 
 - **"check this for slop"** — runs the CLI, reports the score, explains every flag in context, identifies false positives, and does a contextual review beyond what regex catches.
 - **"clean this up, it reads too AI"** — analyzes, rewrites, and re-checks until the score passes.
-- **"generate a voice directive"** — produces a system prompt constraint block to prevent slop at generation time.
-
-The `references/` directory contains the full check reference and contextual review guide that the skill loads.
+- **"generate a prompt"** — produces a chat or system prompt to prevent slop at generation time.
 
 ## Install (CLI)
 

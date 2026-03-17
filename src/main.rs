@@ -70,6 +70,17 @@ enum Commands {
         config: Option<PathBuf>,
     },
 
+    /// Install sloppy as a skill/rule for an AI coding agent.
+    Skill {
+        /// Install the skill for the specified agent
+        #[arg(long)]
+        install: bool,
+
+        /// Target agent (default: claude)
+        #[arg(long, value_enum, default_value_t = Agent::Claude)]
+        agent: Agent,
+    },
+
     /// Inspect or initialize configuration.
     Config {
         /// Print the fully resolved config.
@@ -80,6 +91,30 @@ enum Commands {
         #[arg(long)]
         init: bool,
     },
+}
+
+#[derive(Clone, ValueEnum)]
+enum Agent {
+    /// Claude Code (~/.claude/skills/sloppy/)
+    Claude,
+    /// Cursor (.cursor/rules/sloppy.mdc)
+    Cursor,
+    /// Windsurf (.windsurf/rules/sloppy.md)
+    Windsurf,
+    /// GitHub Copilot (.github/instructions/sloppy.instructions.md)
+    Copilot,
+    /// Cline (.clinerules/sloppy.md)
+    Cline,
+    /// Roo Code (.roo/rules/sloppy.md)
+    Roo,
+    /// Continue (.continue/rules/sloppy.md)
+    Continue,
+    /// Amp (.amp/skills/sloppy.md)
+    Amp,
+    /// Goose (.goosehints — appends)
+    Goose,
+    /// Aider (CONVENTIONS.md — appends)
+    Aider,
 }
 
 #[derive(Clone, ValueEnum)]
@@ -111,6 +146,8 @@ fn main() {
             copy,
             config: config_path,
         } => cmd_prompt(mode, copy, config_path),
+
+        Commands::Skill { install, agent } => cmd_skill(install, agent),
 
         Commands::Config { dump, init } => cmd_config(dump, init),
     }
@@ -345,6 +382,220 @@ fn copy_to_clipboard(text: &str) {
     }
 
     eprintln!("Could not copy to clipboard (no pbcopy, xclip, or xsel found).");
+}
+
+// ── Embedded skill files ──────────────────────────────────────────────────
+
+const SKILL_MD: &str = include_str!("../SKILL.md");
+const CHECKS_MD: &str = include_str!("../references/checks.md");
+const CONTEXTUAL_REVIEW_MD: &str = include_str!("../references/contextual-review.md");
+
+/// Agent-agnostic rules content for non-Claude agents.
+/// These agents don't support Claude's full skill system, so we provide
+/// a simplified rules file that teaches the agent how to use the sloppy CLI.
+fn agent_rules_content() -> String {
+    format!(
+        r#"# Sloppy — AI Prose Detection & Repair
+
+When the user asks you to check, review, fix, or clean up prose for AI tells
+("slop"), or when they ask for a voice/system directive to prevent slop, use
+the `sloppy` CLI tool.
+
+## Quick reference
+
+```bash
+# Analyze a file (JSON output for structured results)
+sloppy analyze -f json file.md || true
+
+# Analyze from stdin
+echo "text" | sloppy analyze -f json || true
+
+# Generate a chat prompt for clean writing
+sloppy prompt generate
+
+# Generate a prompt for cleaning up sloppy text
+sloppy prompt cleanup
+
+# Generate raw system prompt constraints
+sloppy prompt system
+```
+
+## Workflow
+
+1. **Analyze first.** Always run `sloppy analyze -f json` before rewriting.
+   Report the score and pass/fail to the user immediately.
+
+2. **Interpret flags.** For each flag, explain *why* the pattern reads as
+   AI-generated, not just that it was detected. Quote the surrounding context.
+   Call out false positives — the detector can't distinguish "landscape" used
+   literally vs. metaphorically, "robust" in engineering context, etc.
+
+3. **Contextual review.** Look for AI tells the regex misses: hedging language,
+   balanced-perspective equivocation, generic abstractions, false gravitas,
+   structural uniformity, and sycophantic softeners.
+
+4. **Rewrite** (if the user asked for a fix). Don't just swap flagged words —
+   restructure sentences. Anchor in concrete specifics. Take committed stances.
+   Vary sentence length. End when done (no summary paragraph).
+
+5. **Re-check.** Run `sloppy analyze -f json` on the rewrite to verify
+   improvement. Iterate up to 3 times if needed.
+
+## Scoring
+
+- 0-10: Clean human prose
+- 10-30: Minor tells, probably fine
+- 30-60: Noticeable AI patterns
+- 60-100: Unmistakably AI-generated
+
+Exit codes: 0 = pass, 1 = fail, 2 = error.
+
+## Install
+
+If `sloppy` is not found, install it:
+```bash
+brew install bradleydwyer/sloppy/sloppy
+```
+Or from source: `cargo install --git https://github.com/bradleydwyer/sloppy`
+"#
+    )
+}
+
+fn cmd_skill(install: bool, agent: Agent) {
+    if !install {
+        println!("Use --install to install the sloppy skill for an AI coding agent.");
+        println!();
+        println!("Supported agents:");
+        println!("  claude     Claude Code (~/.claude/skills/sloppy/)");
+        println!("  cursor     Cursor (.cursor/rules/sloppy.mdc)");
+        println!("  windsurf   Windsurf (.windsurf/rules/sloppy.md)");
+        println!("  copilot    GitHub Copilot (.github/instructions/sloppy.instructions.md)");
+        println!("  cline      Cline (.clinerules/sloppy.md)");
+        println!("  roo        Roo Code (.roo/rules/sloppy.md)");
+        println!("  continue   Continue (.continue/rules/sloppy.md)");
+        println!("  amp        Amp (.amp/skills/sloppy.md)");
+        println!("  goose      Goose (appends to .goosehints)");
+        println!("  aider      Aider (appends to CONVENTIONS.md)");
+        println!();
+        println!("Examples:");
+        println!("  sloppy skill --install                  # Install for Claude Code");
+        println!("  sloppy skill --install --agent cursor    # Install for Cursor");
+        return;
+    }
+
+    match agent {
+        Agent::Claude => install_claude(),
+        Agent::Cursor => install_project_file(
+            ".cursor/rules",
+            "sloppy.mdc",
+            &format!(
+                "---\ndescription: AI prose detection and repair using the sloppy CLI\nglobs:\nalwaysApply: false\n---\n\n{}",
+                agent_rules_content()
+            ),
+        ),
+        Agent::Windsurf => {
+            install_project_file(".windsurf/rules", "sloppy.md", &agent_rules_content())
+        }
+        Agent::Copilot => install_project_file(
+            ".github/instructions",
+            "sloppy.instructions.md",
+            &format!(
+                "---\napplyTo: \"**/*.md,**/*.txt,**/*.mdx\"\n---\n\n{}",
+                agent_rules_content()
+            ),
+        ),
+        Agent::Cline => install_project_file(".clinerules", "sloppy.md", &agent_rules_content()),
+        Agent::Roo => install_project_file(".roo/rules", "sloppy.md", &agent_rules_content()),
+        Agent::Continue => {
+            install_project_file(".continue/rules", "sloppy.md", &agent_rules_content())
+        }
+        Agent::Amp => install_project_file(".amp/skills", "sloppy.md", &agent_rules_content()),
+        Agent::Goose => install_append(".", ".goosehints", &agent_rules_content()),
+        Agent::Aider => install_append(".", "CONVENTIONS.md", &agent_rules_content()),
+    }
+}
+
+fn install_claude() {
+    let home = std::env::var("HOME").unwrap_or_else(|_| {
+        eprintln!("Could not determine home directory.");
+        process::exit(2);
+    });
+
+    let claude_dir = PathBuf::from(&home).join(".claude");
+    if !claude_dir.exists() {
+        eprintln!(
+            "Warning: {} does not exist. Is Claude Code installed?",
+            claude_dir.display()
+        );
+        eprintln!("Installing anyway...");
+        eprintln!();
+    }
+
+    let skill_dir = claude_dir.join("skills").join("sloppy");
+    let refs_dir = skill_dir.join("references");
+
+    std::fs::create_dir_all(&refs_dir).unwrap_or_else(|e| {
+        eprintln!("Error creating {}: {e}", refs_dir.display());
+        process::exit(2);
+    });
+
+    write_file(&skill_dir.join("SKILL.md"), SKILL_MD);
+    write_file(&refs_dir.join("checks.md"), CHECKS_MD);
+    write_file(&refs_dir.join("contextual-review.md"), CONTEXTUAL_REVIEW_MD);
+
+    println!("Installed sloppy skill for Claude Code:");
+    println!("  {}/SKILL.md", skill_dir.display());
+    println!("  {}/checks.md", refs_dir.display());
+    println!("  {}/contextual-review.md", refs_dir.display());
+}
+
+fn install_project_file(dir: &str, filename: &str, content: &str) {
+    let path = PathBuf::from(dir);
+    std::fs::create_dir_all(&path).unwrap_or_else(|e| {
+        eprintln!("Error creating {}: {e}", path.display());
+        process::exit(2);
+    });
+
+    let file_path = path.join(filename);
+    write_file(&file_path, content);
+    println!("Installed sloppy rules: {}", file_path.display());
+}
+
+fn install_append(dir: &str, filename: &str, content: &str) {
+    use std::io::Write;
+
+    let file_path = PathBuf::from(dir).join(filename);
+    let mut file = std::fs::OpenOptions::new()
+        .create(true)
+        .append(true)
+        .open(&file_path)
+        .unwrap_or_else(|e| {
+            eprintln!("Error opening {}: {e}", file_path.display());
+            process::exit(2);
+        });
+
+    // Add separator if file already has content
+    let existing = std::fs::read_to_string(&file_path).unwrap_or_default();
+    if !existing.is_empty() && !existing.ends_with('\n') {
+        writeln!(file).ok();
+    }
+    if !existing.is_empty() {
+        writeln!(file, "\n---\n").ok();
+    }
+
+    write!(file, "{content}").unwrap_or_else(|e| {
+        eprintln!("Error writing to {}: {e}", file_path.display());
+        process::exit(2);
+    });
+
+    println!("Appended sloppy rules to: {}", file_path.display());
+}
+
+fn write_file(path: &PathBuf, content: &str) {
+    std::fs::write(path, content).unwrap_or_else(|e| {
+        eprintln!("Error writing {}: {e}", path.display());
+        process::exit(2);
+    });
 }
 
 fn cmd_config(dump: bool, init: bool) {

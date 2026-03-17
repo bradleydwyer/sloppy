@@ -13,7 +13,7 @@ user-invocable: true
 argument-hint: "[file to review, or 'prompt' to generate a chat/system prompt]"
 metadata:
   author: bradleydwyer
-  version: "0.6.0"
+  version: "0.7.0"
   status: experimental
 ---
 
