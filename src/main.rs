@@ -371,13 +371,12 @@ fn copy_to_clipboard(text: &str) {
             .args(*args)
             .stdin(std::process::Stdio::piped())
             .spawn()
+            && let Some(ref mut stdin) = child.stdin
+            && stdin.write_all(text.as_bytes()).is_ok()
+            && child.wait().is_ok()
         {
-            if let Some(ref mut stdin) = child.stdin {
-                if stdin.write_all(text.as_bytes()).is_ok() && child.wait().is_ok() {
-                    eprintln!("Copied to clipboard.");
-                    return;
-                }
-            }
+            eprintln!("Copied to clipboard.");
+            return;
         }
     }
 
@@ -394,8 +393,7 @@ const CONTEXTUAL_REVIEW_MD: &str = include_str!("../references/contextual-review
 /// These agents don't support Claude's full skill system, so we provide
 /// a simplified rules file that teaches the agent how to use the sloppy CLI.
 fn agent_rules_content() -> String {
-    format!(
-        r#"# Sloppy — AI Prose Detection & Repair
+    r#"# Sloppy — AI Prose Detection & Repair
 
 When the user asks you to check, review, fix, or clean up prose for AI tells
 ("slop"), or when they ask for a voice/system directive to prevent slop, use
@@ -458,7 +456,7 @@ brew install bradleydwyer/sloppy/sloppy
 ```
 Or from source: `cargo install --git https://github.com/bradleydwyer/sloppy`
 "#
-    )
+    .to_string()
 }
 
 fn cmd_skill(install: bool, agent: Agent) {
