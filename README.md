@@ -30,7 +30,10 @@ sloppy includes a skill installer for AI coding agents. The skill adds an LLM re
 ### Install the skill
 
 ```bash
-# Claude Code (full skill with references)
+# With equip (recommended)
+equip install bradleydwyer/sloppy
+
+# Or with the built-in installer
 sloppy skill --install
 
 # Other agents
