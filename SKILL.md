@@ -13,7 +13,7 @@ user-invocable: true
 argument-hint: "[file to review, or 'prompt' to generate a chat/system prompt]"
 metadata:
   author: bradleydwyer
-  version: "0.7.0"
+  version: "1.0.1"
   status: experimental
 ---
 
@@ -36,13 +36,12 @@ The `sloppy` CLI must be available on PATH.
 
 **Homebrew (recommended):**
 ```bash
-brew tap bradleydwyer/sloppy
-brew install sloppy
+brew install bradleydwyer/tap/sloppy
 ```
 
 **From source (requires Rust toolchain):**
 ```bash
-cargo install --git https://github.com/bradleydwyer/sloppy --tag v0.5.2
+cargo install --git https://github.com/bradleydwyer/sloppy --tag v1.0.1
 ```
 
 **Verify installation:**
