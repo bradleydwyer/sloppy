@@ -189,3 +189,16 @@ Exit codes: 0 = pass, 1 = fail, 2 = error.
 ## License
 
 MIT
+
+## More Tools
+
+**Naming & Availability**
+- [available](https://github.com/bradleydwyer/available) — AI-powered project name finder (uses parked, staked & published)
+- [parked](https://github.com/bradleydwyer/parked) — Domain availability checker (DNS → WHOIS → RDAP)
+- [staked](https://github.com/bradleydwyer/staked) — Package registry name checker (npm, PyPI, crates.io + 19 more)
+- [published](https://github.com/bradleydwyer/published) — App store name checker (App Store & Google Play)
+
+**AI Tooling**
+- [caucus](https://github.com/bradleydwyer/caucus) — Multi-LLM consensus engine
+- [nanaban](https://github.com/bradleydwyer/nanaban) — Gemini image generation CLI
+- [equip](https://github.com/bradleydwyer/equip) — Cross-agent skill manager
